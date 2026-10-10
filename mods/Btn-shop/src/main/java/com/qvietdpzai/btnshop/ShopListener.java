@@ -56,11 +56,28 @@ public final class ShopListener implements Listener {
             if (s.items.isEmpty() || s.slot >= 54) continue;
             inv.setItem(s.slot, icon(s));
         }
+        inv.setItem(4, balanceItem(p));
         inv.setItem(48, button(Material.CHEST, ChatColor.YELLOW + "Ban do", "Ban item ban dang co", "tra gia shop"));
         inv.setItem(50, button(Material.PAPER, ChatColor.GRAY + "Thong tin",
                 "Mua: click trai 1 / phai = 1 chong", "Shift = 1 chong (64)"));
         inv.setItem(53, button(Material.BARRIER, ChatColor.RED + "Dong", null, null));
         p.openInventory(inv);
+    }
+
+    /** Item hien so du cua nguoi choi trong GUI shop. */
+    private static ItemStack balanceItem(Player p) {
+        ItemStack i = new ItemStack(Material.SUNFLOWER);
+        ItemMeta m = i.getItemMeta();
+        double bal = plugin.hasEconomy() ? plugin.economy().getBalance(p) : 0;
+        m.setDisplayName(ChatColor.GOLD + "So du cua ban");
+        List<String> lore = new ArrayList<>();
+        lore.add(ChatColor.WHITE + "$" + String.format("%,.2f", bal));
+        lore.add("");
+        lore.add(ChatColor.GRAY + "Mua: click trai = 1, phai/shift = 1 chong");
+        lore.add(ChatColor.GRAY + "Ban: " + ChatColor.YELLOW + "/shop sell");
+        m.setLore(lore);
+        i.setItemMeta(m);
+        return i;
     }
 
     public static void openSection(Player p, ShopConfig.Section sec, int page) {
@@ -71,6 +88,7 @@ public final class ShopListener implements Listener {
         for (int i = from; i < Math.min(from + PER_PAGE, sec.items.size()); i++) {
             inv.setItem(i - from, shopItem(sec.items.get(i)));
         }
+        inv.setItem(4, balanceItem(p));
         // hang nav cuoi
         inv.setItem(45, button(Material.ARROW, ChatColor.YELLOW + "< Ve menu", null, null));
         if (pages > 1) {
@@ -110,6 +128,7 @@ public final class ShopListener implements Listener {
         }
         inv.setItem(45, button(Material.GOLD_BLOCK, ChatColor.GOLD + "BAN TAT CA",
                 "Ban moi item co gia", "trong tui do cua ban"));
+        inv.setItem(48, balanceItem(p));
         inv.setItem(49, button(Material.ARROW, ChatColor.YELLOW + "< Ve shop", null, null));
         inv.setItem(53, button(Material.BARRIER, ChatColor.RED + "Dong", null, null));
         p.openInventory(inv);
@@ -203,6 +222,7 @@ public final class ShopListener implements Listener {
         p.sendMessage(ChatColor.GREEN + "Da mua " + qty + "x " + pretty(entry.material)
                 + ChatColor.GRAY + " -$" + plugin.money(total));
 
+        refreshBalance(p);
         plugin.shopLog(String.format(Locale.US, "%s bought %d x %s for %.2f with the buy screen.",
                 p.getName(), qty, entry.material.toLowerCase(Locale.US), total));
     }
@@ -248,6 +268,15 @@ public final class ShopListener implements Listener {
         plugin.shopLog(String.format(Locale.US, "%s sold %d items for %.2f with the sell all button.",
                 p.getName(), items, total));
         openSell(p);
+    }
+
+    /** Cap nhat o so du trong GUI dang mo (sau khi mua/ban). */
+    private static void refreshBalance(Player p) {
+        Inventory open = p.getOpenInventory().getTopInventory();
+        if (open != null && open.getHolder() instanceof ShopHolder) {
+            open.setItem(4, balanceItem(p));
+            p.updateInventory();
+        }
     }
 
     // ---------------- tien ich ----------------
