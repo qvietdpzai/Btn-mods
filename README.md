@@ -67,6 +67,19 @@ Quyền: `btnmp.admin` (alias lệnh: `/bm`, `/mplayer`).
 
 ---
 
+## Mod thay thế plugin bên ngoài (23 → 19 plugin)
+
+| Btn-mod | Thay thế | Trạng thái |
+|---|---|---|
+| Btn-combatlog | CombatLog 1.20 | tag combat, chặn lệnh trốn fight, `kill` khi logout giữa combat |
+| Btn-deathchest | DeathChest 1.4.0 | đồ vào rương tại chỗ, tự hết hạn, chỉ chủ rương mở |
+| Btn-gsit | GSit 3.5.1 | ngồi slab/bậc thang, Shift hoặc `/sit` để đứng |
+| Btn-veinminer | All-In-One-VeinMiner-TreeFeller 1.1.5 | phá block cùng loại liền kề, giới hạn theo cuộc, trừ độ bền |
+
+Lệnh: `/combatlog`, `/deathchest`, `/sit`, `/veinminer` (mỗi cái có alias). Cấu hình mỗi mod tại `mods/<tên>/src/main/resources/config.yml`.
+
+Plugin gốc đã được đổi tên thành `*.jar.disabled` trên server → restart là chỉ chạy bản Btn. Muốn hoàn tác: đổi tên lại và xóa jar Btn.
+
 ## SFTP
 
 - Host: `sftp.nvnmc.asia` | Port: `2023` | User: `vietp8082yvt.b4e77c30`
