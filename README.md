@@ -4,14 +4,25 @@ Kho git lưu trữ & build các mod (plugin Spigot) cho server nvnmc, rồi depl
 
 Target: **Paper 26.2-129 / Minecraft 26.2 / Java 25**, port 26059, `online-mode=false`.
 
+> **Trạng thái hiện tại (10/10/2026):** Admin đã quyết định **quay về plugin gốc**, nên tất cả Btn-mods
+> đã được gỡ khỏi server (jar + folder config). Các plugin gốc đã khôi phục:
+> CombatLog, DeathChest, GSit, All-In-One-VeinMiner-TreeFeller, EconomyShopGUI (7.3.2).
+> Code trong repo được **giữ lại** để nếu cần dùng lại thì build + deploy tiếp.
+
 ## Cấu trúc repo (đa mod)
 
 ```
 mods/
   Btn-checkhealth/       # kiểm tra / phân tích / đánh giá hiệu suất server
-  Btn-managerplayer/     # quản lý người chơi + theo dõi họ ở đâu, làm gì
+  Btn-combatlog/         # thay CombatLog
+  Btn-deathchest/        # thay DeathChest
+  Btn-gsit/              # thay GSit
+  Btn-managerplayer/     # quản lý người chơi + theo dõi
+  Btn-shop/              # thay EconomyShopGUI (nặng, có migrate tool)
+  Btn-veinminer/         # thay All-In-One-VeinMiner-TreeFeller
 build.sh                 # build tất cả mod hoặc 1 mod: ./build.sh <Tên-mod>
 deploy.sh                # push jar lên SFTP plugins/ rồi xóa local
+tools/migrate-esg.py     # migrate EconomyShopGUI -> Btn-shop/shops.yml
 ```
 
 ## Build
@@ -33,7 +44,7 @@ Sau khi push **phải restart server** thì plugin mới được nạp.
 
 ---
 
-## Mod 1: Btn-checkhealth (đã chạy trên server)
+## Btn-checkhealth
 
 Kiểm tra - phân tích - đánh giá hiệu suất server.
 
@@ -45,7 +56,7 @@ Báo cáo gồm: điểm sức khỏe 0–100 + hạng (EXCELLENT→CRITICAL), T
 
 Cảnh báo tự động: TPS<18, MSPT>45ms, entities>1500, RAM>85%. Phát hiện spam lệnh nặng `/fill` `/setblock` `/clone`... theo cmd/s per player (`action: warn|cancel`).
 
-## Mod 2: Btn-managerplayer
+## Btn-managerplayer
 
 Quản lý người chơi và theo dõi họ **ở đâu, đang làm gì**.
 
