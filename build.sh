@@ -3,13 +3,13 @@
 # Downloads spigot-api snapshot if missing, compiles with javac, packages jar.
 set -euo pipefail
 
-JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
+JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
 JAVAC="$JAVA_HOME/bin/javac"
 JAR="$JAVA_HOME/bin/jar"
 
 API_DIR="libs"
 API_JAR="$API_DIR/spigot-api.jar"
-VER="1.21.11-R0.2-SNAPSHOT"
+VER="26.2-R0.1-SNAPSHOT"
 
 mkdir -p "$API_DIR" target/classes
 

@@ -1,6 +1,6 @@
 name: Btn-mods
 version: 1.0.0
 main: com.qvietdpzai.btnmods.BtnMods
-api-version: '1.21'
+api-version: '26.2'
 description: Custom mod/plugin for nvnmc server
 author: qvietdpzai
