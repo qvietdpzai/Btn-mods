@@ -2414,6 +2414,12 @@ sections:
       - material: SHIELD
         buy: 12.74
         sell: 3.19
+    - material: WIND_CHARGE
+      buy: 100
+      sell: 25
+    - material: BREEZE_ROD
+      buy: 150
+      sell: 37.5
   potions:
     title: 'Potions'
     icon: POTION
