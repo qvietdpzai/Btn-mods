@@ -1,0 +1,10 @@
+# Btn-shop - cau hinh
+
+# Prefix thong bao trong game
+prefix: '&8[&aShop&8] &7'
+
+# Tien to ghi log shop - LangChillBridge doc dung tien to nay de day len web
+log-prefix: 'Shop >> '
+
+# Dung Vault economy (bat tat)
+use-vault: true

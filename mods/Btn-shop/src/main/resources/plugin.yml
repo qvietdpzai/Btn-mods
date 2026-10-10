@@ -1,0 +1,27 @@
+name: Btn-shop
+version: 1.0.0
+main: com.qvietdpzai.btnshop.BtnShop
+api-version: '26.2'
+depend: [Vault]
+description: Shop nhe: 1 file shops.yml, GUI mua/ban, ket noi Vault economy
+author: qvietdpzai
+commands:
+  shop:
+    description: Mo shop
+    usage: /shop [section|sell]
+    aliases: [store, shopgui]
+    permission: btnshop.use
+  sellgui:
+    description: Mo giao dien ban do
+    usage: /sellgui
+    aliases: [sellall, sel]
+  btnshop:
+    description: Quan ly shop (admin)
+    usage: /btnshop help
+    permission: btnshop.admin
+    permission-message: Ban khong co quyen nay.
+permissions:
+  btnshop.use:
+    default: true
+  btnshop.admin:
+    default: op

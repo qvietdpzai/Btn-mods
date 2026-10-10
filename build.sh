@@ -46,7 +46,7 @@ build_one() {
 
     echo "[build] Compile $mod ..."
     # shellcheck disable=SC2046
-    "$JAVAC" -cp "$API_JAR" -d "$classes" $(find "$dir/src/main/java" -name '*.java') || return 1
+    "$JAVAC" -cp "$API_JAR:build-lib/VaultAPI.jar" -d "$classes" $(find "$dir/src/main/java" -name '*.java') || return 1
     cp -r "$dir/src/main/resources/." "$classes/"
 
     echo "[build] Dong goi $out (main=$main) ..."
