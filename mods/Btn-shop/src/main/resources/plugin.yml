@@ -2,7 +2,8 @@ name: Btn-shop
 version: 1.0.0
 main: com.qvietdpzai.btnshop.BtnShop
 api-version: '26.2'
-depend: [Vault]
+depend:
+  - Vault
 description: Shop nhe: 1 file shops.yml, GUI mua/ban, ket noi Vault economy
 author: qvietdpzai
 commands:
