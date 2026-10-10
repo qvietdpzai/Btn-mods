@@ -1,0 +1,11 @@
+# Btn-managerplayer - cau hinh
+
+tracking:
+  # Phut khong hoat dong -> tinh la AFK trong /btnmp list
+  afk-minutes: 10
+  # Thoi gian theo doi 1 nguoi toi da (phut) - sau do tu tat
+  watch-duration-minutes: 15
+
+# Chu ky luu du lieu nguoi choi xuong dia (giay)
+storage:
+  save-interval-seconds: 300

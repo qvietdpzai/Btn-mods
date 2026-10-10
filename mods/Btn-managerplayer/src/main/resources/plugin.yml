@@ -1,0 +1,17 @@
+name: Btn-managerplayer
+version: 1.0.0
+main: com.qvietdpzai.btnmgr.BtnManagerPlayer
+api-version: '26.2'
+description: Quan ly nguoi choi va theo doi ho dang o dau, lam gi
+author: qvietdpzai
+commands:
+  btnmp:
+    description: Quan ly nguoi choi (ban/mute/kick/heal/fly/gm/inv) + theo doi hoat dong
+    usage: /btnmp help
+    aliases: [bm, mplayer, btnmanagerplayer]
+    permission: btnmp.admin
+    permission-message: Ban khong co quyen dung lenh nay.
+permissions:
+  btnmp.admin:
+    default: op
+    description: Toan quyen quan ly nguoi choi

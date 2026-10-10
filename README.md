@@ -1,80 +1,73 @@
-# Btn-checkhealth
+# Btn-mods
 
-Plugin **kiểm tra - phân tích - đánh giá hiệu suất** server Minecraft nvnmc.
+Kho git lưu trữ & build các mod (plugin Spigot) cho server nvnmc, rồi deploy lên hosting qua SFTP.
 
-## Kết quả điều tra hiệu năng server (trước khi code)
+Target: **Paper 26.2-129 / Minecraft 26.2 / Java 25**, port 26059, `online-mode=false`.
 
-Đọc qua logs 09–10/10/2026, spark, Paper config, world data:
+## Cấu trúc repo (đa mod)
 
-| Hạng mục | Phát hiện |
-|---|---|
-| Runtime | Paper 26.2-129 / MC 26.2, **Java 25**, Moonrise, libdeflate |
-| World | **527 region files (~3.1 GB)** — rất lớn, nhiều chunk |
-| Config | view-distance 6, sim-distance 4 (đã thấp), Paper world config mặc định |
-| "Can't keep up" | **0** → TPS không rơi thảm hại liên tục |
-| **Nguyên nhân lag chính** | OP `Syrien_Sami` spam **`/fill` 168 lệnh/giây** (13:50:32–37, 14:59, 19:07 ngày 09/10) — tổng ~700 lệnh `/fill`, 8.890 block trong 2 ngày |
-| Khác | 20× timeout Mojang sessionserver (do join), DiscordSRV topic updater spam warning (vô hại), EconomyShopGUI 28 sections |
-
-→ Không phải lag do plugin or config; chủ yếu do **spam lệnh nặng trên server thread**. Plugin này giúp phát hiện sớm tình trạng đó.
+```
+mods/
+  Btn-checkhealth/       # kiểm tra / phân tích / đánh giá hiệu suất server
+  Btn-managerplayer/     # quản lý người chơi + theo dõi họ ở đâu, làm gì
+build.sh                 # build tất cả mod hoặc 1 mod: ./build.sh <Tên-mod>
+deploy.sh                # push jar lên SFTP plugins/ rồi xóa local
+```
 
 ## Build
 
 ```bash
-./build.sh        # tải spigot-api 26.2, compile JDK 25, đóng gói jar
+./build.sh                          # build tất cả mod trong mods/
+./build.sh Btn-managerplayer        # build 1 mod
 ```
 
-Ra: `target/Btn-checkhealth-1.0.0.jar`
+Ra: `target/<Tên-mod>-<version>.jar`. Tự tải `spigot-api 26.2-R0.1-SNAPSHOT` nếu thiếu.
 
 ## Deploy (push lên nvnmc hosting qua SFTP, rồi xóa local)
 
 ```bash
-./deploy.sh                       # tự lấy jar mới nhất trong target/
-./deploy.sh target/Btn-checkhealth-1.0.0.jar
+./deploy.sh target/Btn-managerplayer-1.0.0.jar   # deploy 1 mod
 ```
 
-Script upload jar → `sftp://sftp.nvnmc.asia:2023` thư mục `plugins/`, rồi xóa local.
-Sau khi restart server, gõ `/btn health` để xem báo cáo.
+Sau khi push **phải restart server** thì plugin mới được nạp.
 
-## Lệnh
+---
 
-| Lệnh | Chức năng |
+## Mod 1: Btn-checkhealth (đã chạy trên server)
+
+Kiểm tra - phân tích - đánh giá hiệu suất server.
+
+**Kết quả điều tra lag (09–10/10/2026):** không có "Can't keep up" (0 lần); nguyên nhân lag chính là OP `Syrien_Sami` spam `/fill` **168 lệnh/giây** (3 đợt: 13:50, 14:59, 19:07 ngày 09/10, ~700 lệnh / 8.890 block). World 527 region files (~3.1 GB).
+
+**Lệnh:** `/btn health` | `tps` | `top [n]` | `recent [player]` | `alerts` | `reload`
+
+Báo cáo gồm: điểm sức khỏe 0–100 + hạng (EXCELLENT→CRITICAL), TPS 1m/5m/15m, MSPT avg/peak, RAM, entity theo loại + theo world, chunks, players, cảnh báo.
+
+Cảnh báo tự động: TPS<18, MSPT>45ms, entities>1500, RAM>85%. Phát hiện spam lệnh nặng `/fill` `/setblock` `/clone`... theo cmd/s per player (`action: warn|cancel`).
+
+## Mod 2: Btn-managerplayer
+
+Quản lý người chơi và theo dõi họ **ở đâu, đang làm gì**.
+
+| Nhóm | Lệnh |
 |---|---|
-| `/btn health` | Báo cáo đầy đủ: điểm sức khỏe 0–100 + hạng, TPS 1m/5m/15m, MSPT avg/peak, RAM, entities theo loại + theo world, chunks, players, alert |
-| `/btn tps` | TPS/MSPT/score nhanh |
-| `/btn top [n]` | Top n loại entity đang load |
-| `/btn recent [player]` | Tần suất lệnh cmd/s, số lệnh nặng (fill/setblock/clone) theo player |
-| `/btn alerts` | Lịch sử cảnh báo |
-| `/btn reload` | Reload config |
+| Xem | `/btnmp list` — online: vị trí, gamemode, hp, ping, playtime, AFK |
+| | `/btnmp info <ng>` — chi tiết: UUID, playtime, thống kê block/chết/giết/lệnh, vị trí, block đang nhìn, lệnh/chat/block gần nhất |
+| | `/btnmp seen <ng>` — chi tiết người offline |
+| | `/btnmp watch <ng>` / `watch off` — theo dõi trực tiếp 15 phút (di chuyển, chat, lệnh, phá/đặt block, chết, giết, mở túi, vào/ra game) |
+| | `/btnmp log [n]` — nhật ký hoạt động server gần đây |
+| Quản lý | `/btnmp kick\|ban\|unban\|mute\|unmute <ng> [thời gian: 30m\|2h\|3d\|perm] [lý do]` |
+| | `/btnmp heal\|feed\|kill\|inv\|ec <ng>` `fly [on\|off]` `gm <survival\|creative\|adventure\|spectator>` |
+| | `/btnmp tp <ng>` (tới chỗ họ) · `/btnmp bring <ng>` (kéo về chỗ mình) |
+| | `/btnmp bans` \| `mutes` — danh sách đang bị phạt |
 
-## Chức năng nổi bật
+Dữ liệu lưu `plugins/Btn-managerplayer/players/<uuid>.yml` (playtime, thống kê, lần cuối). Ban/mute lưu `punishments/*.yml`, **tự hết hạn**, ban chặn ngay lúc login, mute chặn chat.
 
-- **Điểm sức khỏe 0–100** (EXCELLENT/GOOD/FAIR/POOR/CRITICAL) tính từ TPS, MSPT, entity load, RAM, spam lệnh
-- **Phát hiện spam lệnh nặng**: theo dõi cmd/s per player, `/fill` `/setblock` `/clone`... cảnh báo console/ops, tùy chọn `action: cancel` để chặn (config)
-- **Cảnh báo tự động** khi TPS < 18, MSPT > 45ms, entity > 1500, RAM > 85%
-- **Phân tích entity** theo loại (items/mobs/arrows/xp/vehicles) để biết nên dọn gì
-- Mẫu mỗi 10 giây (config), tiếc RAM không đáng kể
+Quyền: `btnmp.admin` (alias lệnh: `/bm`, `/mplayer`).
 
-## Config (`plugins/Btn-checkhealth/config.yml`)
-
-```yaml
-monitor:
-  interval-seconds: 10
-  alert:
-    tps-threshold: 18.0
-    mspt-threshold-ms: 45.0
-    entity-threshold: 1500
-    notify-ops: true
-    notify-console: true
-command-spy:
-  enabled: true
-  warn-threshold: 25        # cmd/s
-  critical-threshold: 60
-  action: warn              # warn | cancel
-  heavy-commands: [/fill, /setblock, /clone, ...]
-```
+---
 
 ## SFTP
 
-- Host: sftp.nvnmc.asia | Port: 2023
-- User: `vietp8082yvt.b4e77c30` (pass trong deploy.sh)
-- Server: Paper 26.2-129 / MC 26.2 / Java 25, port 26059
+- Host: `sftp.nvnmc.asia` | Port: `2023` | User: `vietp8082yvt.b4e77c30`
+- Pass nằm trong `deploy.sh`
