@@ -1,0 +1,15 @@
+name: Btn-deathchest
+version: 1.0.0
+main: com.qvietdpzai.deathchest.BtnDeathChest
+api-version: '26.2'
+description: Khi chet thi do nam trong ruong tai cho, tu xoa sau thoi gian nhat dinh
+author: qvietdpzai
+commands:
+  deathchest:
+    description: Xem so ruong death chest dang ton tai
+    usage: /deathchest
+    aliases: [dc, bdc]
+    permission: btndeathchest.admin
+permissions:
+  btndeathchest.admin:
+    default: op

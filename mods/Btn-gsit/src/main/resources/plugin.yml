@@ -1,0 +1,14 @@
+name: Btn-gsit
+version: 1.0.0
+main: com.qvietdpzai.gsit.BtnGSit
+api-version: '26.2'
+description: Ngoi tren slab / bac thang / carpet
+author: qvietdpzai
+commands:
+  sit:
+    description: Ngoi hoac dung day
+    usage: /sit
+    aliases: [ngoi]
+permissions:
+  btngsit.use:
+    default: true

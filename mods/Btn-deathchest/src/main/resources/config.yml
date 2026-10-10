@@ -1,0 +1,15 @@
+# Btn-deathchest - thay the DeathChest
+
+enabled: true
+
+# Ruong tu xoa sau bao nhieu phut (do ben trong rot xuong dat neu khong ai nhat)
+expire-minutes: 10
+
+# Chi chu ruong moi mo duoc
+only-owner-can-open: true
+
+# Bao toa do cho nguoi choi khi chet
+message-location: true
+
+# Neu khong co cho dat ruong thi rot do nhu binh thuong
+fallback-drop-if-no-space: true

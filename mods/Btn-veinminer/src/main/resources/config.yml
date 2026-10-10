@@ -1,0 +1,70 @@
+# Btn-veinminer - thay the All-In-One-VeinMiner-TreeFeller
+
+# So block toi da trong 1 lan (gioi han tuy cuoc)
+max-blocks: 64
+
+# Cho phep dung o creative
+allow-creative: false
+
+# Bat che do nay thi an Shift + pha se chi pha 1 block nhu binh thuong
+disable-when-sneaking: true
+
+# Phai dung dung loai cuoc (axe cho go, pickaxe/shovel cho khoang san)
+require-correct-tool: false
+
+# Thong bao so block da pha
+message-count: false
+
+# Cac block duoc dao lien tiep
+vein-blocks:
+  # Quang
+  - COAL_ORE
+  - DEEPSLATE_COAL_ORE
+  - IRON_ORE
+  - DEEPSLATE_IRON_ORE
+  - COPPER_ORE
+  - DEEPSLATE_COPPER_ORE
+  - GOLD_ORE
+  - DEEPSLATE_GOLD_ORE
+  - REDSTONE_ORE
+  - DEEPSLATE_REDSTONE_ORE
+  - LAPIS_ORE
+  - DEEPSLATE_LAPIS_ORE
+  - DIAMOND_ORE
+  - DEEPSLATE_DIAMOND_ORE
+  - EMERALD_ORE
+  - DEEPSLATE_EMERALD_ORE
+  - NETHER_QUARTZ_ORE
+  - NETHER_GOLD_ORE
+  - ANCIENT_DEBRIS
+  # Go
+  - OAK_LOG
+  - SPRUCE_LOG
+  - BIRCH_LOG
+  - JUNGLE_LOG
+  - ACACIA_LOG
+  - DARK_OAK_LOG
+  - MANGROVE_LOG
+  - CHERRY_LOG
+  - CRIMSON_STEM
+  - WARPED_STEM
+  - BAMBOO_BLOCK
+  # Dat da
+  - SAND
+  - RED_SAND
+  - GRAVEL
+  - DIRT
+  - COARSE_DIRT
+  - ROOTED_DIRT
+  - CLAY
+  - SOUL_SAND
+  - SOUL_SOIL
+  - MUD
+  - GRASS_BLOCK
+  - MYCELIUM
+  - PODZOL
+  # Khac
+  - ICE
+  - PACKED_ICE
+  - BLUE_ICE
+  - OBSIDIAN

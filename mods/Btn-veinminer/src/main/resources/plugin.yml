@@ -1,0 +1,17 @@
+name: Btn-veinminer
+version: 1.0.0
+main: com.qvietdpzai.veinminer.BtnVeinMiner
+api-version: '26.2'
+description: Pha cung loai block lien ket voi nhau trong 1 lan
+author: qvietdpzai
+commands:
+  veinminer:
+    description: Xem trang thai / reload config
+    usage: /veinminer [reload]
+    aliases: [vm, bvm]
+    permission: btnveinminer.admin
+permissions:
+  btnveinminer.admin:
+    default: op
+  btnveinminer.use:
+    default: true

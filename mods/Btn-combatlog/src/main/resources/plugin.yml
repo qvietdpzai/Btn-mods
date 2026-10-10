@@ -1,0 +1,16 @@
+name: Btn-combatlog
+version: 1.0.0
+main: com.qvietdpzai.combatlog.BtnCombatLog
+api-version: '26.2'
+description: Tag combat, chan lenh tron fight, trung phat nguoi logout giua combat
+author: qvietdpzai
+commands:
+  combatlog:
+    description: Kiem tra trang thai combat cua ban
+    usage: /combatlog
+    aliases: [cl, bcl]
+permissions:
+  btncombatlog.admin:
+    default: op
+  btncombatlog.notify:
+    default: op

@@ -1,0 +1,32 @@
+# Btn-combatlog - thay the CombatLog
+
+# Thoi gian bi tag sau khi danh hoac bi danh (giay)
+tag-seconds: 15
+
+# Hien thi dem nguoc tren bossbar
+bossbar: true
+
+# Thong bao toan server khi co nguoi logout giua combat
+broadcast-combat-log: true
+
+# Cac lenh bi chan khi dang combat
+blocked-commands:
+  - /home
+  - /homes
+  - /sethome
+  - /spawn
+  - /tpa
+  - /tpaccept
+  - /rtp
+  - /wild
+  - /back
+  - /ehome
+  - /fly
+
+# Lenh chay tren console khi nguoi choi logout giua combat
+# {player} = ten nguoi choi
+punish-commands:
+  - kill {player}
+
+messages:
+  combat-log: '&c{player} da thoat game khi dang combat!'
