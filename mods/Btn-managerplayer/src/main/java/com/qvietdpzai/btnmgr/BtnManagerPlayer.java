@@ -36,6 +36,10 @@ public final class BtnManagerPlayer extends JavaPlugin {
         Watch(UUID targetId, long expiresAt) { this.targetId = targetId; this.expiresAt = expiresAt; }
     }
 
+    /** UUID đại diện console khi admin watch từ console. */
+    private static final java.util.UUID CONSOLE_WATCHER =
+            java.util.UUID.fromString("00000000-0000-0000-0000-000000000000");
+
     @Override
     public void onEnable() {
         getDataFolder().mkdirs();
@@ -93,9 +97,14 @@ public final class BtnManagerPlayer extends JavaPlugin {
         if (serverFeed.size() > 200) serverFeed.pollFirst();
         for (Map.Entry<UUID, Watch> e : watches.entrySet()) {
             if (!e.getValue().targetId.equals(targetId)) continue;
-            Player admin = Bukkit.getPlayer(e.getKey());
-            if (admin != null && admin.isOnline()) {
-                admin.sendMessage(ChatColor.AQUA + "[watch] " + line);
+            UUID watcher = e.getKey();
+            if (CONSOLE_WATCHER.equals(watcher)) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.AQUA + "[watch] " + line);
+            } else {
+                Player admin = Bukkit.getPlayer(watcher);
+                if (admin != null && admin.isOnline()) {
+                    admin.sendMessage(ChatColor.AQUA + "[watch] " + line);
+                }
             }
         }
     }
@@ -334,7 +343,7 @@ public final class BtnManagerPlayer extends JavaPlugin {
     }
 
     private void cmdTp(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player self)) { sender.sendMessage(ChatColor.RED + "Chi nguoi choi dung duoc."); return; }
+        if (!(sender instanceof Player self)) { sender.sendMessage(ChatColor.RED + "Lenh nay phai goi trong game (console khong the tu dich chuyen / mo tui do)."); return; }
         if (args.length < 1) { sender.sendMessage(ChatColor.RED + "Dung: /btnmp tp <nguoi>"); return; }
         Player t = Bukkit.getPlayerExact(args[0]);
         if (t == null) { sender.sendMessage(ChatColor.RED + "Khong online: " + args[0]); return; }
@@ -408,7 +417,7 @@ public final class BtnManagerPlayer extends JavaPlugin {
     }
 
     private void cmdInv(CommandSender sender, String[] args, boolean enderChest) {
-        if (!(sender instanceof Player self)) { sender.sendMessage(ChatColor.RED + "Chi nguoi choi dung duoc."); return; }
+        if (!(sender instanceof Player self)) { sender.sendMessage(ChatColor.RED + "Lenh nay phai goi trong game (console khong the tu dich chuyen / mo tui do)."); return; }
         if (args.length < 1) { sender.sendMessage(ChatColor.RED + "Dung: /btnmp " + (enderChest ? "ec" : "inv") + " <nguoi>"); return; }
         Player t = Bukkit.getPlayerExact(args[0]);
         if (t == null) { sender.sendMessage(ChatColor.RED + "Khong online: " + args[0]); return; }
@@ -418,19 +427,20 @@ public final class BtnManagerPlayer extends JavaPlugin {
     }
 
     private void cmdWatch(CommandSender sender, String[] args) {
-        if (!(sender instanceof Player self)) { sender.sendMessage(ChatColor.RED + "Chi nguoi choi dung duoc."); return; }
+        java.util.UUID watcher = sender instanceof Player p ? p.getUniqueId() : CONSOLE_WATCHER;
         if (args.length < 1 || args[0].equalsIgnoreCase("off")) {
-            watches.remove(self.getUniqueId());
+            watches.remove(watcher);
             sender.sendMessage(ChatColor.YELLOW + "Da tat theo doi.");
             return;
         }
         Player t = Bukkit.getPlayerExact(args[0]);
         if (t == null) { sender.sendMessage(ChatColor.RED + "Khong online: " + args[0]); return; }
         long expiry = System.currentTimeMillis() + getConfig().getInt("tracking.watch-duration-minutes", 15) * 60000L;
-        watches.put(self.getUniqueId(), new Watch(t.getUniqueId(), expiry));
-        sender.sendMessage(ChatColor.GREEN + "Dang theo doi " + t.getName() + " @ " + loc(t)
-                + " (tu tat: /btnmp watch off)");
+        watches.put(watcher, new Watch(t.getUniqueId(), expiry));
+        sender.sendMessage(ChatColor.GREEN + "Dang theo doi " + t.getName() + " @ " + loc(t));
         sender.sendMessage(ChatColor.GRAY + "Se thay: di chuyen, chat, lenh, block pha/dat, chet, giet, mo tui do, vao/ra game");
+        sender.sendMessage(ChatColor.GRAY + "Tu tat: /btnmp watch off (tu dong tat sau "
+                + getConfig().getInt("tracking.watch-duration-minutes", 15) + " phut)");
     }
 
     private void cmdLog(CommandSender sender, String[] args) {
