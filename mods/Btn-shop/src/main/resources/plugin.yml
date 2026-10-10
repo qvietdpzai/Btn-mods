@@ -4,7 +4,7 @@ main: com.qvietdpzai.btnshop.BtnShop
 api-version: '26.2'
 depend:
   - Vault
-description: Shop nhe: 1 file shops.yml, GUI mua/ban, ket noi Vault economy
+description: 'Shop nhe: mot file shops.yml, GUI mua/ban, ket noi Vault economy'
 author: qvietdpzai
 commands:
   shop:
