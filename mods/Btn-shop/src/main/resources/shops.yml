@@ -292,9 +292,6 @@ sections:
       - material: BONE_BLOCK
         buy: 19.85
         sell: 4.97
-      - material: BOOK
-        buy: 35.62
-        sell: 8.91
       - material: BOWL
         buy: 0.87
         sell: 0.22
@@ -2983,6 +2980,21 @@ sections:
       sell: 15.75
       stack-size: 8
 
+  books:
+    title: '&6Sach'
+    icon: BOOK
+    icon-name: '&6Sach'
+    slot: 23
+    items:
+    - material: BOOK
+      buy: 35.62
+      sell: 8.91
+    - material: WRITABLE_BOOK
+      buy: 105.5
+      sell: 26.4
+    - material: WRITTEN_BOOK
+      buy: -1
+      sell: -1
   spawners:
     title: 'Spawners'
     icon: SPAWNER

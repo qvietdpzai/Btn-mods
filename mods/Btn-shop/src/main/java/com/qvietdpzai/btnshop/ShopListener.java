@@ -101,36 +101,62 @@ public final class ShopListener implements Listener {
     }
 
     public static void openSell(Player p) {
-        Inventory inv = Bukkit.createInventory(new ShopHolder("sell", null, 0), 54, SELL_TITLE);
-        Map<String, int[]> totals = new HashMap<>();   // material -> [so luong, gia 1 mon]
-        for (ItemStack it : p.getInventory().getContents()) {
+        Inventory inv = Bukkit.createInventory(new ShopHolder("sellgui", null, 0), 54, SELL_TITLE);
+        for (int i = 45; i < 54; i++) inv.setItem(i, button(Material.GRAY_STAINED_GLASS_PANE, " ", null, null));
+        inv.setItem(48, button(Material.HOPPER, ChatColor.GOLD + "BAN TAT CA", "Ban moi item co gia", "trong tui do cua ban"));
+        inv.setItem(49, button(Material.NETHER_STAR, ChatColor.GREEN + "BAN DO",
+                ChatColor.YELLOW + "Tha do vao cac o tren", ChatColor.YELLOW + "Dong GUI se tu dong ban"));
+        inv.setItem(50, button(Material.ARROW, ChatColor.YELLOW + "Ve shop", null, null));
+        inv.setItem(53, button(Material.BARRIER, ChatColor.RED + "Dong", null, null));
+        p.openInventory(inv);
+    }
+
+    /** Đóng GUI bán đồ: bán hết item có giá, trả lại item không bán được. */
+    @EventHandler
+    public void onSellClose(InventoryCloseEvent event) {
+        if (!(event.getInventory().getHolder() instanceof ShopHolder h) || !h.kind.equals("sellgui")) return;
+        if (!(event.getPlayer() instanceof Player p)) return;
+        Inventory inv = event.getInventory();
+
+        double total = 0;
+        int sold = 0;
+        for (int i = 0; i < 45; i++) {
+            ItemStack it = inv.getItem(i);
             if (it == null || it.getType().isAir()) continue;
             ShopEntry e = plugin.shopConfig().findEntryFor(it);
             if (e == null || !e.canSell()) continue;
-            int[] cur = totals.computeIfAbsent(it.getType().name(), k -> new int[2]);
-            cur[0] += it.getAmount();
-            cur[1] = (int) (100 * e.sell);
+            int per = e.buyUnit() > 1 ? e.buyUnit() : 1;
+            double money = e.sell * it.getAmount() / per;
+            if (money <= 0) continue;
+            total += money;
+            sold += it.getAmount();
+            inv.setItem(i, null);
+            plugin.shopLog(String.format(Locale.US, "%s sold %d x %s for %.2f with the sell gui.",
+                    p.getName(), it.getAmount(), e.material.toLowerCase(Locale.US), money));
         }
-        for (Map.Entry<String, int[]> e : totals.entrySet()) {
-            ItemStack icon = new ItemStack(Material.valueOf(e.getKey()));
-            ItemMeta meta = icon.getItemMeta();
-            meta.setDisplayName(ChatColor.YELLOW + pretty(e.getKey()));
-            List<String> lore = new ArrayList<>();
-            lore.add(ChatColor.GRAY + "Dang co: " + ChatColor.WHITE + e.getValue()[0]);
-            lore.add(ChatColor.GRAY + "Gia: " + ChatColor.GREEN + "$" + MONEY.format(e.getValue()[1] / 100.0) + ChatColor.GRAY + " / mon");
-            lore.add("");
-            lore.add(ChatColor.YELLOW + "Click trai: ban tat ca loai nay");
-            lore.add(ChatColor.YELLOW + "Click phai: ban 1 mon");
-            meta.setLore(lore);
-            icon.setItemMeta(meta);
-            inv.addItem(icon);
+
+        // trả lại item không bán được
+        java.util.List<ItemStack> leftover = new ArrayList<>();
+        for (int i = 0; i < 45; i++) {
+            ItemStack it = inv.getItem(i);
+            if (it == null || it.getType().isAir()) continue;
+            leftover.add(it);
+            inv.setItem(i, null);
         }
-        inv.setItem(45, button(Material.GOLD_BLOCK, ChatColor.GOLD + "BAN TAT CA",
-                "Ban moi item co gia", "trong tui do cua ban"));
-        inv.setItem(48, balanceItem(p));
-        inv.setItem(49, button(Material.ARROW, ChatColor.YELLOW + "< Ve shop", null, null));
-        inv.setItem(53, button(Material.BARRIER, ChatColor.RED + "Dong", null, null));
-        p.openInventory(inv);
+        if (!leftover.isEmpty()) {
+            for (ItemStack it : p.getInventory().addItem(leftover.toArray(new ItemStack[0])).values()) {
+                p.getWorld().dropItemNaturally(p.getLocation(), it);
+            }
+        }
+
+        if (total > 0) {
+            plugin.economy().depositPlayer(p, total);
+            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.2f);
+            p.sendMessage(ChatColor.GREEN + "Da ban " + sold + " item, nhan duoc "
+                    + ChatColor.YELLOW + "$" + plugin.money(total));
+        } else if (!leftover.isEmpty()) {
+            p.sendMessage(ChatColor.YELLOW + "Khong co gi duoc ban (item khong co gia hoac khong khop loai).");
+        }
     }
 
     // ---------------- click ----------------
@@ -142,7 +168,11 @@ public final class ShopListener implements Listener {
 
         if (!(event.getWhoClicked() instanceof Player p)) return;
         if (event.getClickedInventory() == null) return;
-        if (!event.getClickedInventory().equals(event.getInventory())) return; // chi tu dong GUI
+        if (!event.getClickedInventory().equals(event.getInventory())) {
+            // dang bam trong tui do cua nguoi choi: cho phep chuyen do vao GUI ban do
+            if (!holder.kind.equals("sellgui")) event.setCancelled(true);
+            return;
+        }
 
         ItemStack clicked = event.getCurrentItem();
         if (clicked == null || clicked.getType().isAir()) return;
@@ -174,10 +204,19 @@ public final class ShopListener implements Listener {
                 if (slot == 48 && holder.page > 0) { openSection(p, sec, holder.page - 1); return; }
                 if (slot == 52) { openSection(p, sec, holder.page + 1); return; }
             }
+            case "sellgui" -> {
+                if (slot >= 45) {   // nav bar
+                    if (slot == 49 || slot == 53) { sellClose(p); return; }
+                    if (slot == 48) { sellAllFromInventory(p); return; }
+                    if (slot == 50) { openMain(p); return; }
+                    event.setCancelled(true);
+                }
+                return;   // cac o tren: de nguoi choi tha do vao
+            }
             case "sell" -> {
                 if (slot == 49) { openMain(p); return; }
                 if (slot == 53) { p.closeInventory(); return; }
-                if (slot == 45) { sellAll(p); return; }
+                if (slot == 45) { sellAllFromInventory(p); return; }
                 ItemStack real = findInInventory(p, clicked.getType());
                 if (real == null) return;
                 int qty = event.getClick() == ClickType.RIGHT ? 1 : countItem(p, clicked.getType().name());
@@ -250,6 +289,32 @@ public final class ShopListener implements Listener {
         plugin.shopLog(String.format(Locale.US, "%s sold %d x %s for %.2f with the sell gui.",
                 p.getName(), qty, entry.material.toLowerCase(Locale.US), total));
         openSell(p); // refresh
+    }
+
+    private void sellAllFromInventory(Player p) {
+        if (!plugin.hasEconomy()) return;
+        double total = 0; int items = 0;
+        for (ItemStack it : p.getInventory().getContents()) {
+            if (it == null || it.getType().isAir()) continue;
+            ShopEntry e = plugin.shopConfig().findEntryFor(it);
+            if (e == null || !e.canSell()) continue;
+            int per = e.buyUnit() > 1 ? e.buyUnit() : 1;
+            double money = e.sell * it.getAmount() / per;
+            if (money <= 0) continue;
+            total += money; items += it.getAmount();
+            it.setAmount(0);
+        }
+        if (items == 0) { p.sendMessage(ChatColor.YELLOW + "Khong co gi de ban."); return; }
+        plugin.economy().depositPlayer(p, total);
+        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.2f);
+        p.sendMessage(ChatColor.GREEN + "Da ban " + items + " item, nhan duoc "
+                + ChatColor.YELLOW + "$" + plugin.money(total));
+        plugin.shopLog(String.format(Locale.US, "%s sold %d items for %.2f with the sell all button.",
+                p.getName(), items, total));
+    }
+
+    private void sellClose(Player p) {
+        p.closeInventory();   // InventoryCloseEvent se lo viec ban
     }
 
     private void sellAll(Player p) {
