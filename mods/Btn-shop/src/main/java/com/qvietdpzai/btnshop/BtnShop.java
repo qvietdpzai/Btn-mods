@@ -38,7 +38,8 @@ public final class BtnShop extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        if (shopConfig != null) shopConfig.save();
+        // KHONG save() shops.yml o day: viec do se ghi de file neu admin chinh tay
+        // (su dung /btnshop set|add tu luu ngay khi thao tac)
     }
 
     private boolean setupEconomy() {

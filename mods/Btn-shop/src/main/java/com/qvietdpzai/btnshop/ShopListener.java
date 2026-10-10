@@ -164,7 +164,10 @@ public final class ShopListener implements Listener {
     @EventHandler
     public void onClick(InventoryClickEvent event) {
         if (!(event.getInventory().getHolder() instanceof ShopHolder holder)) return;
-        event.setCancelled(true);   // khong the lay item trong GUI
+        // GUI ban do (tha do vao): khong cancel ngoai hang nav
+        if (!holder.kind.equals("sellgui")) event.setCancelled(true);
+        else if (event.getClickedInventory() != null && event.getClickedInventory().equals(event.getInventory())
+                 && event.getSlot() >= 45) event.setCancelled(true);
 
         if (!(event.getWhoClicked() instanceof Player p)) return;
         if (event.getClickedInventory() == null) return;
