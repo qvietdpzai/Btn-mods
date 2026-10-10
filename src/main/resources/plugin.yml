@@ -1,6 +1,17 @@
-name: Btn-mods
+name: Btn-checkhealth
 version: 1.0.0
-main: com.qvietdpzai.btnmods.BtnMods
+main: com.qvietdpzai.btnhealth.BtnCheckHealth
 api-version: '26.2'
-description: Custom mod/plugin for nvnmc server
+description: Kiem tra - phan tich - danh gia hieu suat server nvnmc
 author: qvietdpzai
+commands:
+  btn:
+    description: Kiem tra hang kiem tra chat luong server
+    usage: /btn health|tps|top|recent|alerts|reload
+    permission: btncheckhealth.admin
+    permission-message: Ban khong co quyen dung lenh nay.
+permissions:
+  btncheckhealth.admin:
+    default: op
+  btncheckhealth.bypass:
+    default: op

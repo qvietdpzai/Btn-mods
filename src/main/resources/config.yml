@@ -1,0 +1,38 @@
+# Btn-checkhealth - kiem tra / phan tich / danh gia hieu suat server
+# Plugin thu thap TPS, MSPT, entity, chunk, RAM va phat hien spam lenh nang (fill/setblock...)
+
+monitor:
+  # Chu ky lay mau (giay)
+  interval-seconds: 10
+  # So mau giu lai trong bo nho
+  history-size: 60
+  alert:
+    # Nguong canh bao
+    tps-threshold: 18.0
+    mspt-threshold-ms: 45.0
+    entity-threshold: 1500
+    # Thong bao
+    notify-ops: true
+    notify-console: true
+    cooldown-seconds: 300
+
+command-spy:
+  # Theo doi tan suat lenh / spam lenh nang (nguyen nhan lag that su tren server)
+  enabled: true
+  # Nguong canh bao: so lenh tren giay cua 1 player
+  warn-threshold: 25
+  # Nguong nghiem trong
+  critical-threshold: 60
+  # Hanh dong khi vuot nguong nghiem trong: warn | cancel
+  action: warn
+  # Lenh nang anh huong den tick server
+  heavy-commands:
+    - /fill
+    - /setblock
+    - /clone
+    - /summon
+    - /execute
+    - /particle
+    - /tick
+    - /function
+    - /spreadplayers

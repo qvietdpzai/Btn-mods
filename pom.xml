@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.qvietdpzai</groupId>
-    <artifactId>Btn-mods</artifactId>
+    <artifactId>Btn-checkhealth</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Btn-mods</name>
-    <description>Custom Minecraft mod/plugin for nvnmc server</description>
+    <name>Btn-checkhealth</name>
+    <description>Kiem tra / phan tich / danh gia hieu suat server nvnmc</description>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -38,7 +38,7 @@
     </dependencies>
 
     <build>
-        <finalName>${project.artifactId}-${project.version}</finalName>
+        <finalName>Btn-checkhealth-1.0.0</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
