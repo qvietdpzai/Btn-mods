@@ -53,6 +53,24 @@ public final class ShopConfig {
         return null;
     }
 
+    /** Tìm entry khớp đúng item (cả potion type) - dùng khi bán. */
+    public ShopEntry findEntryFor(org.bukkit.inventory.ItemStack it) {
+        ShopEntry fallback = null;
+        for (Section s : sections.values()) {
+            for (ShopEntry e : s.items) {
+                if (!e.material.equalsIgnoreCase(it.getType().name())) continue;
+                if (e.potion != null) {
+                    if (PotionUtil.matches(it, e.potion)) return e;
+                } else if (e.stackSize > 0 && it.getAmount() % e.stackSize != 0) {
+                    continue;
+                } else if (fallback == null) {
+                    fallback = e;
+                }
+            }
+        }
+        return fallback;
+    }
+
     public ShopEntry findEntry(String material) {
         Section s = findSection(material);
         if (s == null) return null;
@@ -94,9 +112,11 @@ public final class ShopConfig {
                     ShopEntry e = new ShopEntry();
                     e.material = String.valueOf(mat).toUpperCase();
                     Object b = map.get("buy"), sl = map.get("sell"), ss = map.get("stack-size");
+                    Object po = map.get("potion");
                     e.buy = toDouble(b, -1);
                     e.sell = toDouble(sl, -1);
                     e.stackSize = (int) toDouble(ss, 0);
+                    if (po != null && !String.valueOf(po).isBlank()) e.potion = String.valueOf(po).trim();
                     if (Material.matchMaterial(e.material) == null) continue; // bo item khong ton tai
                     sec.items.add(e);
                 }
@@ -129,6 +149,7 @@ public final class ShopConfig {
                 m.put("buy", e.buy);
                 m.put("sell", e.sell);
                 if (e.stackSize > 0) m.put("stack-size", e.stackSize);
+                if (e.potion != null) m.put("potion", e.potion);
                 items.add(m);
             }
             y.set(base + "items", items);

@@ -105,8 +105,7 @@ public final class ShopListener implements Listener {
         Map<String, int[]> totals = new HashMap<>();   // material -> [so luong, gia 1 mon]
         for (ItemStack it : p.getInventory().getContents()) {
             if (it == null || it.getType().isAir()) continue;
-            if (plugin.shopConfig().findEntry(it.getType().name()) == null) continue;
-            ShopEntry e = plugin.shopConfig().findEntry(it.getType().name());
+            ShopEntry e = plugin.shopConfig().findEntryFor(it);
             if (e == null || !e.canSell()) continue;
             int[] cur = totals.computeIfAbsent(it.getType().name(), k -> new int[2]);
             cur[0] += it.getAmount();
@@ -181,10 +180,8 @@ public final class ShopListener implements Listener {
                 if (slot == 45) { sellAll(p); return; }
                 ItemStack real = findInInventory(p, clicked.getType());
                 if (real == null) return;
-                ShopEntry e = plugin.shopConfig().findEntry(clicked.getType().name());
-                if (e == null || !e.canSell()) return;
                 int qty = event.getClick() == ClickType.RIGHT ? 1 : countItem(p, clicked.getType().name());
-                sell(p, e, qty);
+                sell(p, clicked.getType(), qty);
             }
         }
     }
@@ -217,6 +214,7 @@ public final class ShopListener implements Listener {
 
         eco.withdrawPlayer(p, total);
         ItemStack give = new ItemStack(Material.valueOf(entry.material), qty);
+        if (entry.potion != null) PotionUtil.apply(give, entry.potion);
         p.getInventory().addItem(give);
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.4f);
         p.sendMessage(ChatColor.GREEN + "Da mua " + qty + "x " + pretty(entry.material)
@@ -227,16 +225,23 @@ public final class ShopListener implements Listener {
                 p.getName(), qty, entry.material.toLowerCase(Locale.US), total));
     }
 
-    private void sell(Player p, ShopEntry entry, int qty) {
+    private void sell(Player p, Material material, int qty) {
         if (!plugin.hasEconomy()) return;
-        if (entry.sell < 0) { p.sendMessage(ChatColor.RED + "Mon nay shop khong mua."); return; }
+        ItemStack sample = null;
+        for (ItemStack it : p.getInventory().getContents())
+            if (it != null && it.getType() == material) { sample = it; break; }
+        if (sample == null) return;
+        ShopEntry entry = plugin.shopConfig().findEntryFor(sample);
+        if (entry == null || !entry.canSell()) { p.sendMessage(ChatColor.RED + "Mon nay shop khong mua."); return; }
         int have = countItem(p, entry.material);
         if (have <= 0) return;
-        qty = Math.min(qty, have);
+        // ban dung loai potion: loc item khop
+        qty = Math.min(qty, countMatching(p, entry, sample));
+        if (qty <= 0) return;
         double total = entry.sell * qty / (entry.buyUnit() > 1 ? entry.buyUnit() : 1);
         if (total <= 0) { p.sendMessage(ChatColor.RED + "Mon nay khong co gia ban."); return; }
 
-        removeItems(p, entry.material, qty);
+        removeMatching(p, entry, sample, qty);
         plugin.economy().depositPlayer(p, total);
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.4f);
         p.sendMessage(ChatColor.GREEN + "Da ban " + qty + "x " + pretty(entry.material)
@@ -252,7 +257,7 @@ public final class ShopListener implements Listener {
         double total = 0; int items = 0;
         for (ItemStack it : p.getInventory().getContents()) {
             if (it == null || it.getType().isAir()) continue;
-            ShopEntry e = plugin.shopConfig().findEntry(it.getType().name());
+            ShopEntry e = plugin.shopConfig().findEntryFor(it);
             if (e == null || !e.canSell()) continue;
             int per = e.buyUnit() > 1 ? e.buyUnit() : 1;
             double money = e.sell * it.getAmount() / per;
@@ -276,6 +281,30 @@ public final class ShopListener implements Listener {
         if (open != null && open.getHolder() instanceof ShopHolder) {
             open.setItem(4, balanceItem(p));
             p.updateInventory();
+        }
+    }
+
+    /** Số item khớp entry (theo potion type nếu có). */
+    private static int countMatching(Player p, ShopEntry entry, ItemStack sample) {
+        int n = 0;
+        for (ItemStack it : p.getInventory().getContents()) {
+            if (it == null || it.getType().isAir()) continue;
+            if (!it.getType().name().equalsIgnoreCase(entry.material)) continue;
+            if (entry.potion != null && !PotionUtil.matches(it, entry.potion)) continue;
+            n += it.getAmount();
+        }
+        return n;
+    }
+
+    private static void removeMatching(Player p, ShopEntry entry, ItemStack sample, int qty) {
+        for (ItemStack it : p.getInventory().getContents()) {
+            if (it == null || it.getType().isAir()) continue;
+            if (!it.getType().name().equalsIgnoreCase(entry.material)) continue;
+            if (entry.potion != null && !PotionUtil.matches(it, entry.potion)) continue;
+            int take = Math.min(qty, it.getAmount());
+            it.setAmount(it.getAmount() - take);
+            qty -= take;
+            if (qty <= 0) break;
         }
     }
 
@@ -327,8 +356,10 @@ public final class ShopListener implements Listener {
 
     private static ItemStack shopItem(ShopEntry e) {
         ItemStack i = new ItemStack(Material.valueOf(e.material));
+        if (e.potion != null) PotionUtil.apply(i, e.potion);
         ItemMeta m = i.getItemMeta();
-        m.setDisplayName(ChatColor.YELLOW + pretty(e.material));
+        m.setDisplayName(ChatColor.YELLOW + (e.potion != null ? PotionUtil.displayName(e.potion)
+                + ChatColor.DARK_GRAY + " (" + form(e.material) + ")" : pretty(e.material)));
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + "Mua: " + (e.buy >= 0
                 ? ChatColor.GREEN + "$" + MONEY.format(e.buy) + (e.stackSize > 0 ? ChatColor.GRAY + " / chong " + e.stackSize : "")
@@ -340,6 +371,16 @@ public final class ShopListener implements Listener {
         m.setLore(lore);
         i.setItemMeta(m);
         return i;
+    }
+
+    private static String form(String material) {
+        return switch (material) {
+            case "POTION" -> "thuong";
+            case "SPLASH_POTION" -> "nem";
+            case "LINGERING_POTION" -> "luu lang";
+            case "TIPPED_ARROW" -> "mui ten";
+            default -> pretty(material);
+        };
     }
 
     private static ItemStack button(Material mat, String name, String l1, String l2) {

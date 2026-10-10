@@ -8,6 +8,7 @@ public final class ShopEntry {
     public double buy = -1;
     public double sell = -1;
     public int stackSize = 0; // >0: bán theo chồng (vd 16)
+    public String potion;     // loại potion: "healing", "strong_healing", "long_swiftness"... null nếu không phải
 
     public ShopEntry() {}
 
