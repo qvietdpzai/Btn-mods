@@ -203,6 +203,26 @@ public final class DiscordBridge {
                         Object sess = ready.get("session_id");
                         if (sess != null) sessionId = String.valueOf(sess);
                         plugin.getLogger().info("Btn-srv: da ket noi Discord, bot id=" + botId);
+
+                        // *** Bot co nam trong server Discord nao khong? ***
+                        // READY.d.guilds rong = bot CHUA duoc moi vao server nao
+                        // -> khong nghe/gui duoc tin o kenh nao ca.
+                        Object guilds = ready.get("guilds");
+                        int n = (guilds instanceof List<?> gl) ? gl.size() : 0;
+                        plugin.getLogger().info("Btn-srv: bot nam trong " + n + " server Discord");
+                        if (n == 0) {
+                            if (botId != null) {
+                                plugin.getLogger().warning("=================================================");
+                                plugin.getLogger().warning("Bot CHUA duoc moi vao server Discord nao!");
+                                plugin.getLogger().warning("Mo link nay de moi bot vao:");
+                                plugin.getLogger().warning("  https://discord.com/oauth2/authorize?client_id="
+                                        + botId + "&permissions=84992&scope=bot");
+                                plugin.getLogger().warning("Neu link loi, lay lai Client ID tai:");
+                                plugin.getLogger().warning("  https://discord.com/developers/applications -> chon app -> OAuth2");
+                                plugin.getLogger().warning("=================================================");
+                            }
+                        }
+
                         resolveChannelAsync();
                     } else if ("MESSAGE_CREATE".equals(t) && d instanceof Map<?, ?> msg) {
                         onMessage(msg);
