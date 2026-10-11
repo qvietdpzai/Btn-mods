@@ -11,6 +11,9 @@ min-tps: 17.0
 max-ping: 400
 skip-creative: true
 
+# Danh sach world duoc mien kiem tra (de trong de kiem tra tat ca)
+exempt-worlds: []
+
 # Prefix thong bao cho OP trong game
 alert-prefix: '&8[&c!&8] &7'
 
@@ -18,46 +21,78 @@ alert-prefix: '&8[&c!&8] &7'
 discord:
   webhook-url: ''
 
+# Cau hinh trung phat leo thang
+punishments:
+  enabled: true
+  # So lan phat hien truoc khi bat dau ban (mac dinh 5 de giam false positive)
+  flags-before-ban: 5
+  # Ly do ban
+  ban-reason: '&cBan boi Btn-anticheat'
+  # Quy tac thoi han ban: count -> duration (1m, 30m, 1h, 1d, perm)
+  rules:
+    - count: 1
+      duration: "1m"
+    - count: 2
+      duration: "30m"
+    - count: 3
+      duration: "2h"
+    - count: 4
+      duration: "1d"
+    - count: 5
+      duration: "perm"
+
 # Cac bo phat hien - tat/bang cach dat enabled: false
 checks:
   speed:
     enabled: true
+    # Buffer them de tranh bao loi nham tren ice/soul speed/dolphin
+    buffer: 0.25
   fly:
     enabled: true
-    # So tick bay lien tuc truoc khi bao (1s = 20 tick)
-    air-ticks: 40
+    # So tick bay lien tuc truoc khi bao (1s = 20 tick) - tang de cho phep elytra/jump boost
+    air-ticks: 60
+    # Cho phep bay neu co elytra
+    allow-elytra: true
   reach:
     enabled: true
     # Khoang cach danh toi da + block
     max-distance: 6
+    # Buffer cho lag
+    buffer: 1.0
   killaura:
     enabled: true
     # Goc lech toi da khi tan cong (do) - nguoi thuong nhin thang vao dich
-    max-angle: 70
+    max-angle: 90
+    # Bo qua neu dich o phia sau (180 do)
+    ignore-behind: true
   # NoSwing: TAT - bao sai (goi swing toi sau goi danh khi click nhanh/bi lag)
   noswing:
     enabled: false
-    max-ms-since-swing: 350
+    max-ms-since-swing: 500
   autoclick:
     enabled: true
     # So click toi da moi giay
-    max-cps: 20
+    max-cps: 22
   nofall:
     enabled: true
+    # Do cao toi thieu de kiem tra (block)
+    min-fall-distance: 15
+    # Cho phep neu co feather falling
+    allow-feather-falling: true
   fastplace:
     enabled: true
-    max-placement-cps: 25
-  # Phase (di xuyen block): TAT - bao loi nham qua cua, xe, dung do dung block...
+    max-placement-cps: 30
+  # Phase (di xuyen tuong): TAT - bao loi nham qua cua, xe, dung do dung block...
   phase:
     enabled: false
   xray:
     enabled: true
     # Toi thieu block dao duoc truoc khi xet ti le (chong bao nham)
-    min-blocks: 30
+    min-blocks: 50
     # Toi thieu quang da dao khi xet ti le
-    min-ores: 12
+    min-ores: 15
     # Ti le quang/tong block de bi phat hien (0.4 = 40%)
-    ore-ratio: 0.4
+    ore-ratio: 0.35
     # So quang quy (kim cuong/esmeralda/ancient) phat hien neu dao it da
-    min-precious: 8
-    max-stone-no-alert: 40
+    min-precious: 10
+    max-stone-no-alert: 50

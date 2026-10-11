@@ -26,14 +26,17 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /** Btn-anticheat: phat hien cheat (fly/speed/reach/killaura/nofall/velocity/phase/autoclick). */
 public final class DetectionEngine implements Listener {
 
     private final Map<UUID, PlayerState> states = new HashMap<>();
     private BtnAnticheatPlugin plugin;
+    private java.util.Set<String> exemptWorlds = java.util.Collections.emptySet();
 
     // ---------- cau hinh ----------
     private boolean enabled(String check) {
@@ -42,9 +45,19 @@ public final class DetectionEngine implements Listener {
     private int threshold(String check, String key, int def) {
         return plugin.getConfig().getInt("checks." + check + "." + key, def);
     }
+    private double thresholdD(String check, String key, double def) {
+        return plugin.getConfig().getDouble("checks." + check + "." + key, def);
+    }
+    private boolean exemptWorld(Player p) {
+        return exemptWorlds.contains(p.getWorld().getName());
+    }
 
     public void register(BtnAnticheatPlugin plugin) {
         this.plugin = plugin;
+        List<?> worlds = plugin.getConfig().getList("exempt-worlds");
+        if (worlds != null) {
+            exemptWorlds = worlds.stream().map(Object::toString).collect(java.util.stream.Collectors.toSet());
+        }
     }
 
     private double tps() {
@@ -62,6 +75,7 @@ public final class DetectionEngine implements Listener {
     /** Nguoi choi co dkien mien kiem tra khong? */
     private boolean exempt(Player p) {
         if (p.hasPermission("btnanticheat.bypass")) return true;
+        if (exemptWorld(p)) return true;
         if (p.getGameMode() == GameMode.CREATIVE || p.getGameMode() == GameMode.SPECTATOR) {
             if (plugin.getConfig().getBoolean("skip-creative", true)) return true;
         }
@@ -123,7 +137,7 @@ public final class DetectionEngine implements Listener {
                 max *= 1.4 + 0.5 * amp;
             }
             if (p.getWalkSpeed() > 0.25f) max *= p.getWalkSpeed() / 0.2f;
-            max += 0.15; // buffer cho ice/soulspeed/dolphin
+            max += thresholdD("speed", "buffer", 0.25); // buffer cho ice/soulspeed/dolphin
             if (p.getWalkSpeed() <= 0) max = 10;
 
             if (dist > max && (from.getY() == to.getY() || dist > max + 0.3)) {
@@ -145,8 +159,12 @@ public final class DetectionEngine implements Listener {
                 if (dy < 0) { st.fallTicks++; st.maxFallSpeed = Math.max(st.maxFallSpeed, -dy); }
                 else st.fallTicks = 0;
 
-                int airLimit = threshold("fly", "air-ticks", 40);
-                if (st.airTicks > airLimit && st.fallTicks > airLimit) {
+                int airLimit = threshold("fly", "air-ticks", 60);
+                // cho phep elytra
+                boolean allowElytra = plugin.getConfig().getBoolean("checks.fly.allow-elytra", true);
+                if (allowElytra && p.isGliding()) {
+                    st.airTicks = 0; // reset de khong bao loi
+                } else if (st.airTicks > airLimit && st.fallTicks > airLimit) {
                     violate(p, "Fly", String.format("bay lien tuc %d tick (roi tu y=%.1f)",
                             st.airTicks, st.maxFallSpeed));
                     st.airTicks = 0;
@@ -218,9 +236,9 @@ public final class DetectionEngine implements Listener {
             Location eye = p.getEyeLocation();
             double dist = eye.distance(victim.getLocation()) - 0.6;
             double distEye = eye.distance(eyeOf(victim));
-            double maxReach = threshold("reach", "max-distance", 6) + 0.8;
+            double maxReach = threshold("reach", "max-distance", 6) + thresholdD("reach", "buffer", 1.0);
             if (dist > maxReach && distEye > maxReach) {
-                violate(p, "Reach", String.format("danh tu %.2f block (max %.2f)", distEye, maxReach - 0.8));
+                violate(p, "Reach", String.format("danh tu %.2f block (max %.2f)", distEye, maxReach - thresholdD("reach", "buffer", 1.0)));
             }
         }
 
@@ -232,9 +250,14 @@ public final class DetectionEngine implements Listener {
                     .subtract(p.getEyeLocation().toVector());
             toVictim = normalize(toVictim);
             double angle = Math.toDegrees(dir.angle(toVictim));
-            double maxAngle = threshold("killaura", "max-angle", 70);
+            double maxAngle = threshold("killaura", "max-angle", 90);
             if (angle > maxAngle) {
-                violate(p, "KillAura", String.format("danh %.0f do lech huong nhin (%.0f mo dich)", angle, victim.getType()));
+                boolean ignoreBehind = plugin.getConfig().getBoolean("checks.killaura.ignore-behind", true);
+                if (ignoreBehind && angle > 150) {
+                    // bo qua neu dich o phia sau gan 180 do
+                } else {
+                    violate(p, "KillAura", String.format("danh %.0f do lech huong nhin (%.0f mo dich)", angle, victim.getType()));
+                }
             }
         }
 
@@ -268,8 +291,12 @@ public final class DetectionEngine implements Listener {
 
         PlayerState st = state(p);
         // roi tu do cao nhung khong nhan sat thuong / nhan qua it
-        double fallDist = event.getFinalDamage() > 0 ? event.getDamage() : p.getFallDistance();
-        if (p.getFallDistance() > 12 && event.getFinalDamage() <= 0) {
+        double minFallDist = threshold("nofall", "min-fall-distance", 15);
+        boolean allowFeather = plugin.getConfig().getBoolean("checks.nofall.allow-feather-falling", true);
+        if (allowFeather && p.hasPotionEffect(PotionEffectType.SLOW_FALLING)) {
+            return;
+        }
+        if (p.getFallDistance() > minFallDist && event.getFinalDamage() <= 0) {
             violate(p, "NoFall", String.format("roi %.1f block khong nhan sat thuong", p.getFallDistance()));
         }
     }
