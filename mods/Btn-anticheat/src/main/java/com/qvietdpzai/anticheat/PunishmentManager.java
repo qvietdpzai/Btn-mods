@@ -40,18 +40,24 @@ public final class PunishmentManager {
         return plugin.getConfig().getBoolean("punishments.enabled", true);
     }
 
-    /** Xu ly 1 lan vi pham: tang dem va trung phat theo muc. Tra ve mo ta hinh phat (da ap dung) hoac null neu tat. */
+    /** Xu ly 1 lan vi pham: tang dem va trung phat theo muc. Tra ve mo ta hinh phat (da ap dung) hoac null neu tat/chi dem. */
     public String handle(Player p, String check, String detail) {
-        if (!enabled()) return null;
-
+        // van dem so lan vi pham de thong ke (giu du lieu de tinh chinh ve sau)
         int count = violations
                 .computeIfAbsent(p.getUniqueId(), k -> new ConcurrentHashMap<>())
                 .merge(check, 1, Integer::sum);
         names.put(p.getUniqueId(), p.getName());
         save();
 
+        // che do chi ghi log: KHONG ban/kick bat ke action la gi
+        if (!enabled()) {
+            plugin.getLogger().info("[anticheat] " + p.getName() + " | " + check
+                    + " | phat hien lan " + count + " (chi ghi log): " + detail);
+            return null;
+        }
+
         // chi ban khi du so lan bi phat hien; neu chua du -> chi ghi log
-        int minFlags = Math.max(1, plugin.getConfig().getInt("punishments.flags-before-ban", 2));
+        int minFlags = Math.max(1, plugin.getConfig().getInt("punishments.flags-before-ban", 5));
         if (count < minFlags) {
             plugin.getLogger().info("[anticheat] " + p.getName() + " | " + check + " | phat hien lan " + count
                     + "/" + minFlags + " (chi ghi log): " + detail);

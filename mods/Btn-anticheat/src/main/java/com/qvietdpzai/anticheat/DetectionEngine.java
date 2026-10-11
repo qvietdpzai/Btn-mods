@@ -133,8 +133,12 @@ public final class DetectionEngine implements Listener {
 
         PlayerState st = state(p);
 
+        // Nguoi choi dang trong chat long (boi/nuoc/cot khi/dung nham):
+        // khong xet bay va khong xet toc do -> tranh bao loi nham nguoi boi bi coi la bay
+        boolean inLiquid = inLiquid(p, to);
+
         // ---- SPEED ----
-        if (enabled("speed")) {
+        if (enabled("speed") && !inLiquid) {
             double dx = to.getX() - from.getX();
             double dz = to.getZ() - from.getZ();
             double dist = Math.sqrt(dx * dx + dz * dz);
@@ -157,30 +161,36 @@ public final class DetectionEngine implements Listener {
 
         // ---- FLY / AIR ----
         if (enabled("fly")) {
-            boolean onGround = isOnGround(p, to);
-            if (onGround) {
+            if (inLiquid) {
+                // dang boi: reset dem, khong bao bay
                 st.airTicks = 0;
-                st.lastGroundMs = System.currentTimeMillis();
                 st.fallTicks = 0;
             } else {
-                st.airTicks++;
-                double dy = to.getY() - from.getY();
-                if (dy < 0) { st.fallTicks++; st.maxFallSpeed = Math.max(st.maxFallSpeed, -dy); }
-                else st.fallTicks = 0;
-
-                int airLimit = threshold("fly", "air-ticks", 60);
-                // cho phep elytra
-                boolean allowElytra = plugin.getConfig().getBoolean("checks.fly.allow-elytra", true);
-                if (allowElytra && p.isGliding()) {
-                    st.airTicks = 0; // reset de khong bao loi
-                } else if (st.airTicks > airLimit && st.fallTicks > airLimit) {
-                    violate(p, "Fly", String.format("bay lien tuc %d tick (roi tu y=%.1f)",
-                            st.airTicks, st.maxFallSpeed));
+                boolean onGround = isOnGround(p, to);
+                if (onGround) {
                     st.airTicks = 0;
-                }
-                // bay nam ngang khong roi (glide spoof)
-                if (st.airTicks > airLimit * 2 && Math.abs(dy) < 0.001) {
-                    violate(p, "Fly", String.format("dung giua khong khi %d tick", st.airTicks));
+                    st.lastGroundMs = System.currentTimeMillis();
+                    st.fallTicks = 0;
+                } else {
+                    st.airTicks++;
+                    double dy = to.getY() - from.getY();
+                    if (dy < 0) { st.fallTicks++; st.maxFallSpeed = Math.max(st.maxFallSpeed, -dy); }
+                    else st.fallTicks = 0;
+
+                    int airLimit = threshold("fly", "air-ticks", 60);
+                    // cho phep elytra
+                    boolean allowElytra = plugin.getConfig().getBoolean("checks.fly.allow-elytra", true);
+                    if (allowElytra && p.isGliding()) {
+                        st.airTicks = 0; // reset de khong bao loi
+                    } else if (st.airTicks > airLimit && st.fallTicks > airLimit) {
+                        violate(p, "Fly", String.format("bay lien tuc %d tick (roi tu y=%.1f)",
+                                st.airTicks, st.maxFallSpeed));
+                        st.airTicks = 0;
+                    }
+                    // bay nam ngang khong roi (glide spoof)
+                    if (st.airTicks > airLimit * 2 && Math.abs(dy) < 0.001) {
+                        violate(p, "Fly", String.format("dung giua khong khi %d tick", st.airTicks));
+                    }
                 }
             }
         }
@@ -203,7 +213,7 @@ public final class DetectionEngine implements Listener {
 
     private void fallTicksReset(PlayerMoveEvent event, Player p) {
         PlayerState st = state(p);
-        if (isOnGround(p, event.getTo())) {
+        if (isOnGround(p, event.getTo()) || inLiquid(p, event.getTo())) {
             st.airTicks = 0;
             st.fallTicks = 0;
             st.maxFallSpeed = 0;
@@ -216,6 +226,23 @@ public final class DetectionEngine implements Listener {
             return l.clone().subtract(0, 0.05, 0).getBlock().getType().isSolid()
                     || l.getBlock().getType().isSolid();
         } catch (Exception e) { return true; }
+    }
+
+    /**
+     * Nguoi choi co dang o trong chat long (boi nuoc, cot khi, dung nham, lava)?
+     * Khi boi, nguoi choi khong dung tren block solid nen isOnGround() = false.
+     * Neu khong loai tru, boi 3 giay se bi bao la "bay".
+     */
+    private boolean inLiquid(Player p, Location l) {
+        try {
+            if (l.getBlock().isLiquid()) return true;
+            Location feet = l.clone().subtract(0, 0.15, 0);
+            if (feet.getBlock().isLiquid()) return true;
+            // dau/nguc co the chim duoi nuoc
+            Location head = l.clone().add(0, 0.9, 0);
+            if (head.getBlock().isLiquid()) return true;
+        } catch (Exception ignored) { }
+        return p.isSwimming();
     }
 
     // ---------- COMBAT: reach / killaura / autoclick ----------

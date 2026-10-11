@@ -55,11 +55,16 @@ public final class BtnAnticheatPlugin extends JavaPlugin {
             sender.sendMessage(ChatColor.WHITE + "/anticheat reset <ng>|all" + ChatColor.GRAY + " - xoa diem vi pham");
             sender.sendMessage(ChatColor.WHITE + "/anticheat reload" + ChatColor.GRAY + " - nap lai config");
             sender.sendMessage(ChatColor.GRAY + "Log: plugins/Btn-anticheat/logs/anticheat.log");
-            int minFlags = getConfig().getInt("punishments.flags-before-ban", 2);
-            sender.sendMessage(ChatColor.WHITE + "Chinh sach: " + ChatColor.YELLOW + minFlags
-                    + ChatColor.GRAY + " lan phat hien moi bat dau ban | lan 1: " + punishments.durationFor(1)
-                    + " | lan 2: " + punishments.durationFor(2)
-                    + " | lan 3: " + punishments.durationFor(3));
+            if (punishments.enabled()) {
+                int minFlags = getConfig().getInt("punishments.flags-before-ban", 5);
+                sender.sendMessage(ChatColor.WHITE + "Trung phat: " + ChatColor.YELLOW + "BAT" + ChatColor.GRAY
+                        + " | " + minFlags + " lan phat hien moi ban | lan 1: " + punishments.durationFor(1)
+                        + " | lan 2: " + punishments.durationFor(2)
+                        + " | lan 3: " + punishments.durationFor(3));
+            } else {
+                sender.sendMessage(ChatColor.WHITE + "Trung phat: " + ChatColor.GREEN + "TAT"
+                        + ChatColor.GRAY + " - chi ghi log, khong ban/kick (bat: punishments.enabled: true)");
+            }
             if (getConfig().getString("discord.webhook-url", "").isEmpty()) {
                 sender.sendMessage(ChatColor.YELLOW + "Chua cau hinh Discord webhook (plugins/Btn-anticheat/config.yml)");
             }

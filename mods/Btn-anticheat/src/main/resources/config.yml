@@ -27,8 +27,10 @@ discord:
   channel-id: ''
 
 # Cau hinh trung phat leo thang
+# QUAN TRONG: dat false = KHONG BAO GIO ban/kick, chi ghi log + gui Discord.
+# Doi thanh true neu muon bat che do trung phat (kem flags-before-ban ben duoi).
 punishments:
-  enabled: true
+  enabled: false
   # So lan phat hien truoc khi bat dau ban (mac dinh 5 de giam false positive)
   flags-before-ban: 5
   # Ly do ban
