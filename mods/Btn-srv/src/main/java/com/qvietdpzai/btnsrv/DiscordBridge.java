@@ -50,6 +50,14 @@ public final class DiscordBridge {
 
     // ---------------- vong doi ----------------
 
+    /**
+     * Gateway URL: mac dinh Discord that sua URL.
+     * (Khong can thay doi, de test dung URL gia lap ws://).) */
+    private String gatewayUrl() {
+        String cfg = plugin.cfg() != null ? plugin.cfg().getString("discord.gateway-url", "") : "";
+        return (cfg == null || cfg.isBlank()) ? GATEWAY : cfg.trim();
+    }
+
     public void start() {
         String token = plugin.cfg().getString("discord.bot-token", "").trim();
         if (token.isBlank()) {
@@ -65,6 +73,8 @@ public final class DiscordBridge {
 
     public void stop() {
         running = false;
+        // mo latch va huy heartbeat de connect() (neu dang cho) thoat ngay
+        try { gateClose.countDown(); } catch (Exception ignored) { }
         if (hbTask != null) hbTask.cancel(true);
         if (heartbeats != null) heartbeats.shutdownNow();
         try { if (ws != null) ws.sendClose(java.net.http.WebSocket.NORMAL_CLOSURE, "bye").get(5, TimeUnit.SECONDS); }
@@ -89,17 +99,31 @@ public final class DiscordBridge {
 
     private void connect() throws Exception {
         plugin.getLogger().info("Btn-srv: dang ket noi Discord gateway...");
+
+        // tat heartbeat executor cu (tranh ro ri thread khi ket noi lai)
+        if (heartbeats != null) heartbeats.shutdownNow();
+
         heartbeats = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "Btn-srv-heartbeat");
             t.setDaemon(true);
             return t;
         });
 
-        ws = HttpClient.newHttpClient()
-                .newWebSocketBuilder()
+        // latch moi cho moi ket noi: onClose se mo -> biet khi nao bi ngat
+        gateClose = new java.util.concurrent.CountDownLatch(1);
+        lastAck = System.currentTimeMillis();
+
+        ws = http.newWebSocketBuilder()
                 .connectTimeout(Duration.ofSeconds(15))
-                .buildAsync(URI.create(GATEWAY), new wsListener())
-                .get(20, TimeUnit.SECONDS);
+                .buildAsync(URI.create(gatewayUrl()), new wsListener())
+                .get(20, TimeUnit.SECONDS);   // chi cho toi khi HANDSHAKE xong
+
+        // QUAN TRONG: drain o day toi khi ket noi bi dong.
+        // Neu khong, vong lap se tao ket noi moi trong khi ket noi cu van mo
+        // -> hang tram session cung luc, Discord rate-limit roi dong tat ca.
+        while (running) {
+            if (gateClose.await(1, TimeUnit.SECONDS)) break;
+        }
     }
 
     // ---------------- gateway events ----------------
@@ -138,7 +162,8 @@ public final class DiscordBridge {
         }
     }
 
-    private final java.util.concurrent.CountDownLatch gateClose = new java.util.concurrent.CountDownLatch(1);
+    /** Mo khi WebSocket bi dong, de connect() biet phai ket noi lai. Khong final vi doi moi khi ket noi. */
+    private volatile java.util.concurrent.CountDownLatch gateClose = new java.util.concurrent.CountDownLatch(1);
 
     /** Xu ly 1 frame JSON tu gateway. */
     private void handle(String raw) {
@@ -159,7 +184,8 @@ public final class DiscordBridge {
                     }
                     startHeartbeats();
                     identify();
-                    backoffMs = 1000; // ket noi thanh cong -> reset backoff
+                    // KHONG reset backoff o day: reset nhieu lan lam backoff khong bao gio tang,
+                    // ket noi lai mai moi 1s -> bi Discord rate-limit.
                 }
                 case 11 -> lastAck = System.currentTimeMillis(); // Heartbeat ACK
                 case 7, 9 -> { // Reconnect / Invalid Session
