@@ -28,6 +28,28 @@ if [[ ! -s "$API_JAR" ]]; then
     curl -skL -A "$UA" -o "$API_JAR" "$URL"
 fi
 
+# YAMLCHECK: phat hien dau ":" chua quote trong plugin.yml/config.yml
+# (neu thieu se loi InvalidDescriptionException khi Paper doc plugin.yml)
+python3 - <<'PYEOF'
+import glob, re, sys
+bad = []
+for f in glob.glob('mods/*/src/main/resources/plugin.yml') + glob.glob('mods/*/src/main/resources/config.yml'):
+    for i, line in enumerate(open(f, encoding='utf-8'), 1):
+        m = re.match(r'^(\s*[\w-]+):\s+(.*)$', line.rstrip())
+        if not m:
+            continue
+        val = m.group(2)
+        if not val or val[0] in "#'\"[{":
+            continue
+        if re.search(r'[A-Za-z0-9]+:\s', val) or val.endswith(':'):
+            bad.append("%s:%d: %s" % (f, i, line.strip()))
+if bad:
+    print("[build] LOI: dau ':' chua quote (Paper se khong doc duoc plugin.yml):")
+    for b in bad:
+        print("   " + b)
+    sys.exit(1)
+PYEOF
+
 build_one() {
     local mod="$1"
     local dir="mods/$mod"

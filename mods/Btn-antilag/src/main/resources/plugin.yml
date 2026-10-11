@@ -2,7 +2,7 @@ name: Btn-antilag
 version: 1.0.0
 main: com.qvietdpzai.antilag.BtnAntilag
 api-version: '26.2'
-description: Giam tai server: don item rac, gioi han quai, view-distance linh hoat
+description: 'Giam tai server: don item rac, gioi han quai, view-distance linh hoat'
 author: qvietdpzai
 commands:
   antilag:
