@@ -17,7 +17,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.PlayerAnimationEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -219,7 +218,7 @@ public final class DetectionEngine implements Listener {
         } catch (Exception e) { return true; }
     }
 
-    // ---------- COMBAT: reach / killaura / noswing / autoclick ----------
+    // ---------- COMBAT: reach / killaura / autoclick ----------
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onAttack(EntityDamageByEntityEvent event) {
@@ -271,25 +270,11 @@ public final class DetectionEngine implements Listener {
             }
         }
 
-        // ---- NO SWING: danh ma khong vay tay ----
-        if (enabled("noswing")) {
-            long sinceSwing = now - st.lastSwingMs;
-            int maxSince = threshold("noswing", "max-ms-since-swing", 350);
-            if (sinceSwing > maxSince && st.lastAttackMs != now) {
-                violate(p, "NoSwing", "tan cong ma khong vay tay (" + sinceSwing + "ms)");
-            }
-        }
-
         st.lastAttackMs = now;
         st.lastVictim = victim.getUniqueId();
 
         // ---- VELOCITY: bat dau theo doi knockback ----
         st.lastVelocityMs = now;
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void onAnim(PlayerAnimationEvent event) {
-        state(event.getPlayer()).lastSwingMs = System.currentTimeMillis();
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

@@ -2,7 +2,7 @@ name: Btn-anticheat
 version: 1.0.0
 main: com.qvietdpzai.anticheat.BtnAnticheatPlugin
 api-version: '26.2'
-description: 'Chong cheat: fly, speed, reach, killaura, nofall, phase, autoclick, noswing, fastplace - ghi log ra file + Discord'
+description: 'Chong cheat: fly, speed, reach, killaura, nofall, autoclick, fastplace, xray - ghi log ra file + Discord'
 author: qvietdpzai
 commands:
   anticheat:

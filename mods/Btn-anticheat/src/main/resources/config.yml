@@ -63,10 +63,6 @@ checks:
     max-angle: 90
     # Bo qua neu dich o phia sau (180 do)
     ignore-behind: true
-  # NoSwing: TAT - bao sai (goi swing toi sau goi danh khi click nhanh/bi lag)
-  noswing:
-    enabled: false
-    max-ms-since-swing: 500
   autoclick:
     enabled: true
     # So click toi da moi giay
