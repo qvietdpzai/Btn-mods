@@ -1,0 +1,51 @@
+# Btn-anticheat - chong cheat va ghi log
+
+# Hanh dong khi vi pham: log (chi ghi) | kick | ban
+# Neu khong phai "log": xoa diem sau khi thuc hien
+action: log
+# So lan vi pham toi da truoc khi thuc hien hanh dong (chi khi action != log)
+max-violations-before-action: 15
+
+# Bo qua neu TPS thap hoac ping cao (tranh bao loi nham)
+min-tps: 17.0
+max-ping: 400
+skip-creative: true
+
+# Prefix thong bao cho OP trong game
+alert-prefix: '&8[&c!&8] &7'
+
+# Gui log ve Discord (de trong neu khong dung)
+discord:
+  webhook-url: ''
+
+# Cac bo phat hien - tat/bang cach dat enabled: false
+checks:
+  speed:
+    enabled: true
+  fly:
+    enabled: true
+    # So tick bay lien tuc truoc khi bao (1s = 20 tick)
+    air-ticks: 40
+  reach:
+    enabled: true
+    # Khoang cach danh toi da + block
+    max-distance: 6
+  killaura:
+    enabled: true
+    # Goc lech toi da khi tan cong (do) - nguoi thuong nhin thang vao dich
+    max-angle: 70
+  noswing:
+    enabled: true
+    # Thoi gian toi da khong vay tay ma van danh duoc (ms)
+    max-ms-since-swing: 350
+  autoclick:
+    enabled: true
+    # So click toi da moi giay
+    max-cps: 20
+  nofall:
+    enabled: true
+  fastplace:
+    enabled: true
+    max-placement-cps: 25
+  phase:
+    enabled: true

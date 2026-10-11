@@ -1,0 +1,20 @@
+name: Btn-anticheat
+version: 1.0.0
+main: com.qvietdpzai.anticheat.BtnAnticheatPlugin
+api-version: '26.2'
+description: Chong cheat: fly, speed, reach, killaura, nofall, phase, autoclick, noswing, fastplace - ghi log ra file + Discord
+author: qvietdpzai
+commands:
+  anticheat:
+    description: Xem trang thai va quan ly anticheat
+    usage: /anticheat
+    aliases: [ac, banti]
+    permission: btnanticheat.admin
+    permission-message: Ban khong co quyen nay.
+permissions:
+  btnanticheat.admin:
+    default: op
+  btnanticheat.bypass:
+    default: false
+  btnanticheat.alerts:
+    default: op
