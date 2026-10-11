@@ -43,6 +43,8 @@ public final class DiscordBridge {
     private String heartbeatInterval = "41250";
     private int backoffMs = 1000;
     private long lastAck;
+    /** Lan cuoi canh bao "noi dung rong" (throttle 30s, tranh spam log). */
+    private long lastBlankWarnMs;
 
     public DiscordBridge(BtnSrvPlugin plugin) {
         this.plugin = plugin;
@@ -279,9 +281,13 @@ public final class DiscordBridge {
         if (d.containsKey("webhook_id") && d.get("webhook_id") != null) return;
         if (botId != null && botId.equals(String.valueOf(d.get("author_id")))) return;
 
-        String ch = str(d.get("channel_id"));
-        String target = channelId();
-        if (target != null && !target.isBlank() && !ch.equals(target)) return; // chi lay 1 kenh
+        // *** chi lay 1 khen NEU nguoi dung tu cau hinh channel-id ***
+        // Neu de trong -> nghe TAT CA kenh (khong tu kiem duyet, khong bo sot).
+        String configured = plugin.cfg().getString("discord.channel-id", "").trim();
+        if (!configured.isBlank()) {
+            String ch = str(d.get("channel_id"));
+            if (!configured.equals(ch)) return;
+        }
 
         Object authorObj = d.get("author");
         if (!(authorObj instanceof Map<?, ?> author)) return;
@@ -290,7 +296,20 @@ public final class DiscordBridge {
         if (name.isBlank()) name = "Discord";
 
         String content = str(d.get("content"));
-        if (content.isBlank()) return;
+        // *** CHAN DOAN 1 CHIEU ***
+        // Neu bot nhan duoc event nhung noi dung RONG -> MESSAGE_CONTENT
+        // chua bat o Developer Portal. Khong log duoc -> kho do loi.
+        if (content.isBlank()) {
+            long now = System.currentTimeMillis();
+            if (now - lastBlankWarnMs > 30_000) {   // gioi han 1 lan/30s
+                lastBlankWarnMs = now;
+                plugin.getLogger().warning("Btn-srv: nhan duoc tin NHUNG noi dung RONG.");
+                plugin.getLogger().warning("  -> Hay bat MESSAGE CONTENT INTENT tai:");
+                plugin.getLogger().warning("     discord.com/developers/applications -> chon app -> Bot");
+                plugin.getLogger().warning("     -> Privileged Gateway Intents -> MESSAGE CONTENT INTENT");
+            }
+            return;
+        }
 
         // tin nho -> bo qua
         Object type = d.get("type");
@@ -298,6 +317,10 @@ public final class DiscordBridge {
 
         // loai bo mention voi @everyone/@here
         content = content.replace("@everyone", "@ everyone").replace("@here", "@ here");
+
+        // log de biet bot co NHAN duoc tin (phan biet "khong nhan" vs "nhan nhung loi khac")
+        plugin.getLogger().info("[Btn-srv] nhan tin tu Discord [" + str(d.get("channel_id"))
+                + "] " + name + ": " + content);
 
         rankAndBroadcast(name, content, d);
     }
@@ -310,23 +333,26 @@ public final class DiscordBridge {
 
     /** Lay rank Discord theo mapping role-id -> ten rank trong config. */
     private String discordRank(Map<?, ?> raw) {
+        Map<String, String> map = new java.util.HashMap<>();
+        var sec = plugin.cfg().getConfigurationSection("discord.role-map");
+        if (sec != null) {
+            for (var e : sec.getValues(false).entrySet()) {
+                map.put(String.valueOf(e.getKey()), String.valueOf(e.getValue()));
+            }
+        }
+
         List<?> roles = null;
         if (raw.get("member") instanceof Map<?, ?> member && member.get("roles") instanceof List<?> r) {
             roles = r;
         }
-        Map<String, String> map = plugin.cfg().getConfigurationSection("discord.role-map").getValues(false)
-                .entrySet().stream()
-                .collect(java.util.stream.Collectors.toMap(e -> String.valueOf(e.getKey()),
-                        e -> String.valueOf(e.getValue())));
         if (roles != null) {
             for (Object r : roles) {
-                String id = String.valueOf(r);
-                String mapped = map.get(id);
+                String mapped = map.get(String.valueOf(r));
                 if (mapped != null) return mapped;
             }
         }
         String def = plugin.cfg().getString("discord.default-discord-rank", "Member");
-        return def;
+        return def == null || def.isBlank() ? "Member" : def;
     }
 
     // ---------------- gui tin len Discord ----------------
