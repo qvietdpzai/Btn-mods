@@ -1,0 +1,21 @@
+name: Btn-srv
+version: 1.0.0
+main: com.qvietdpzai.btnsrv.BtnSrvPlugin
+api-version: '26.2'
+description: 'Cau noi chat giua nguoi choi trong game va Discord, hien thi rank + ten'
+author: qvietdpzai
+softdepend:
+  - LuckPerms
+commands:
+  btnsrv:
+    description: Trang thai va quan ly cau noi Discord
+    usage: /btnsrv status|reload|say <noi dung>
+    aliases: [srv, btnbridge]
+    permission: btnsrv.admin
+    permission-message: Ban khong co quyen nay.
+permissions:
+  btnsrv.admin:
+    default: op
+  btnsrv.ignore:
+    default: false
+    description: Nguoi choi co quyen nay khong bi gui tin len Discord

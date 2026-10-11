@@ -1,0 +1,57 @@
+# Btn-srv - cau noi chat Minecraft <-> Discord
+
+# Bat/tat toan bo plugin
+enabled: true
+
+discord:
+  # --- De NHAN tin tu Discord (bat buoc): token cua bot ---
+  # Lay tai: https://discord.com/developers/applications -> chon app -> Bot -> Reset Token -> copy
+  # LUU Y: token dat o plugins/Btn-srv/config.yml tren SERVER, khong commit len git
+  bot-token: ''
+
+  # --- De GUI tin len Discord ---
+  # Cach 1: webhook (khuyen dung - hien thi ten + avatar tuy chinh)
+  #   Chuot phai kenh -> Edit Channel -> Integrations -> Webhooks -> New Webhook -> Copy Webhook URL
+  webhook-url: ''
+  # Cach 2: de trong -> gui bang bot token (bot can quyen Send Messages trong kenh)
+
+  # Kenh de dong bo. De trong -> tu dong tim kenh text dau tien bot gui duoc
+  channel-id: ''
+  # ID server (guild). De trong neu co nhieu server va muon tu chon
+  guild-id: ''
+
+  # Hien thi rank cua nguoi choi trong Discord (lay tu LuckPerms)
+  show-rank: true
+  # Rank mac dinh cho nguoi dung Discord khong co role duoc map
+  default-discord-rank: 'Member'
+  # Map role-id (Discord) -> ten rank hien trong game
+  # Lay role id: bat Developer Mode -> chuot phai role -> Copy Role ID
+  role-map:
+    '123456789012345678': 'Admin'
+    '123456789012345679': 'VIP'
+
+# Kieu hien thi trong game khi co tin tu Discord
+format:
+  discord-to-game: '&8[&bDiscord&8]&r %RANK%%NAME%&7: &f%MESSAGE%'
+  rank-color: '6'
+  name-color: 'b'
+  message-color: 'f'
+
+# Cach lay rank cua nguoi choi trong game (thu tu tu tren xuong)
+rank:
+  # 1. LuckPerms API (tu dong, khong can cau hinh)
+  # 2. Cac group sau, kiem tra qua permission node "group.<ten>"
+  #    (LuckPerms tu gan cac node nay cho nguoi choi)
+  groups:
+    - owner
+    - admin
+    - mod
+    - helper
+    - vip
+    - member
+    - default
+  # 3. Map permission -> rank (neu khong tim thay o tren)
+  map:
+    'rank.admin': 'Admin'
+    'rank.vip': 'VIP'
+    'rank.mvp': 'MVP'
