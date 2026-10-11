@@ -78,8 +78,12 @@ public final class BtnShop extends JavaPlugin {
             sender.sendMessage("Lệnh này dùng trong game.");
             return true;
         }
-        if (!player.hasPermission("btnshop.use")) {
-            player.sendMessage(ChatColor.RED + "Ban khong co quyen dung shop.");
+        // Shop mo cho TAT CA (khong kiem tra permission):
+        // PlugManX nap plugin sau LuckPerms nen node 'btnshop.use' khong nhan
+        // duoc default tu plugin.yml -> moi nguoi choi deu bi tu choi.
+        // Muon chan nguoi nao -> them permission 'btnshop.deny' cho ho.
+        if (player.hasPermission("btnshop.deny")) {
+            player.sendMessage(ChatColor.RED + "Ban khong duoc dung shop.");
             return true;
         }
         if (args.length == 0 || args[0].equalsIgnoreCase("menu")) {

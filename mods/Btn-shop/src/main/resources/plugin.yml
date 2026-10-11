@@ -12,7 +12,9 @@ commands:
     description: Mo shop
     usage: /shop [section|sell]
     aliases: [store, shopgui]
-    permission: btnshop.use
+    # KHONG dat permission: PlugManX nap plugin SAU khi LuckPerms da chay
+    # -> LuckPerms khong nhan duoc default 'true' -> moi nguoi bi tu choi.
+    # Shop mo cho tat ca; admin dung /btnshop de quan ly.
   sellgui:
     description: Mo giao dien ban do
     usage: /sellgui
@@ -23,7 +25,5 @@ commands:
     permission: btnshop.admin
     permission-message: Ban khong co quyen nay.
 permissions:
-  btnshop.use:
-    default: true
   btnshop.admin:
     default: op
