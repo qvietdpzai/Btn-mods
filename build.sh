@@ -5,7 +5,7 @@
 #       ./build.sh Btn-checkhealth -> build 1 mod cu the
 #
 # Moi mod: mods/<Ten-mod>/src/main/java + src/main/resources
-set -uo pipefail
+set -euo pipefail
 
 JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-25-openjdk-amd64}"
 JAVAC="$JAVA_HOME/bin/javac"
@@ -48,6 +48,40 @@ if bad:
     for b in bad:
         print("   " + b)
     sys.exit(1)
+PYEOF
+
+# YAMLPARSE: kiem tra MOI file .yml trong resources PARSE DUOC.
+# Ly do: plugin.yml/config.yml hop le KHONG co nghia la shops.yml/vi.yml hop le.
+# Neu shops.yml lech lech thut 1 space -> Paper khong doc duoc -> shop trong (0 item).
+# TODO can python3-yaml: sudo apt-get install python3-yaml
+python3 - <<'PYEOF'
+import glob, sys
+try:
+    import yaml
+except ImportError:
+    print("[build] CANH BAO: chua cai python3-yaml -> bo qua kiem tra parse YAML")
+    print("           Cai bang: sudo apt-get install python3-yaml")
+    sys.exit(0)
+
+bad = 0
+checked = 0
+for f in sorted(glob.glob('mods/*/src/main/resources/**/*.yml', recursive=True)):
+    checked += 1
+    try:
+        with open(f, encoding='utf-8') as fh:
+            yaml.safe_load(fh)
+    except Exception as e:
+        bad += 1
+        msg = str(e).replace('\n', '\n     ')
+        print("[build] LOI PARSE YAML: %s" % f)
+        print("     %s" % msg)
+
+if bad:
+    print("[build] ===> %d file YAML loi (da kiem tra %d file)." % (bad, checked))
+    print("           Sua lech thut le (indentation) roi build lai.")
+    sys.exit(1)
+else:
+    print("[build] YAML parse OK: %d file" % checked)
 PYEOF
 
 build_one() {
