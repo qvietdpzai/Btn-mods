@@ -49,3 +49,14 @@ checks:
     max-placement-cps: 25
   phase:
     enabled: true
+  xray:
+    enabled: true
+    # Toi thieu block dao duoc truoc khi xet ti le (chong bao nham)
+    min-blocks: 30
+    # Toi thieu quang da dao khi xet ti le
+    min-ores: 12
+    # Ti le quang/tong block de bi phat hien (0.4 = 40%)
+    ore-ratio: 0.4
+    # So quang quy (kim cuong/esmeralda/ancient) phat hien neu dao it da
+    min-precious: 8
+    max-stone-no-alert: 40

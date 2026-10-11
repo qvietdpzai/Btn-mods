@@ -81,12 +81,11 @@ public final class DetectionEngine implements Listener {
     private void violate(Player p, String check, String detail) {
         PlayerState st = state(p);
         st.violations++;
-        st.level = Math.min(20, st.level + 2);
         st.lastViolationMs = System.currentTimeMillis();
 
         plugin.logger().log(p.getName(), check, detail, p.getPing(), tps());
 
-        // thong bao OP trong game
+        // thong bao OP trong game (truoc khi bi ban ra)
         String prefix = ChatColor.translateAlternateColorCodes('&',
                 plugin.getConfig().getString("alert-prefix", "&8[&c!&8] &7"));
         String msg = prefix + ChatColor.RED + p.getName() + ChatColor.GRAY + " | " + check + " | " + detail;
@@ -94,17 +93,8 @@ public final class DetectionEngine implements Listener {
             if (op.hasPermission("btnanticheat.alerts")) op.sendMessage(msg);
         }
 
-        // hanh dong
-        String action = plugin.getConfig().getString("action", "log");
-        int maxVio = plugin.getConfig().getInt("max-violations-before-action", 15);
-        if (st.violations >= maxVio) {
-            if (action.equalsIgnoreCase("kick")) {
-                p.kickPlayer(ChatColor.RED + "[Btn-anticheat] Phat hien hanh vi khong hop le: " + check);
-            } else if (action.equalsIgnoreCase("ban")) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "ban " + p.getName() + " [anticheat] " + check);
-            }
-            if (!action.equalsIgnoreCase("log")) st.violations = 0;
-        }
+        // trung phat leo thang (ban 1 phut -> 30 phut -> vinh vien)
+        plugin.punishments().handle(p, check, detail);
     }
 
     // ---------- MOVEMENT: speed / fly / phase ----------
@@ -302,6 +292,68 @@ public final class DetectionEngine implements Listener {
         if (st.attacksThisSecond > limit) {
             violate(p, "FastPlace", st.attacksThisSecond + " block/giay");
         }
+    }
+
+    // ---------- XRAY ----------
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBreak(org.bukkit.event.block.BlockBreakEvent event) {
+        if (!enabled("xray")) return;
+        Player p = event.getPlayer();
+        if (p.hasPermission("btnanticheat.bypass")) return;
+        if (p.getGameMode() == GameMode.CREATIVE) return;
+
+        Material mat = event.getBlock().getType();
+        PlayerState st = state(p);
+        st.totalMined++;
+
+        boolean isOre = isOre(mat);
+        if (isOre) st.oreMined++;
+        if (isStone(mat)) st.stoneMined++;
+
+        if (isOre) {
+            st.lastOreMs = System.currentTimeMillis();
+            st.oreStreak++;
+            if (isPrecious(mat)) st.preciousMined++;
+
+            if (st.totalMined >= threshold("xray", "min-blocks", 30)
+                    && st.stoneMined > 0
+                    && st.oreMined >= threshold("xray", "min-ores", 12)) {
+                double ratio = (double) st.oreMined / (st.totalMined);
+                double limit = plugin.getConfig().getDouble("checks.xray.ore-ratio", 0.4);
+                if (ratio >= limit) {
+                    violate(p, "Xray", String.format(
+                            "ti le quang/da %.0f%% (%d quang / %d block, trong do %d quang quy)",
+                            ratio * 100, st.oreMined, st.totalMined, st.preciousMined));
+                    return;
+                }
+            }
+            // dao qua nhieu quang quy ma khong co da
+            int precious = threshold("xray", "min-precious", 8);
+            if (st.preciousMined >= precious && st.stoneMined < threshold("xray", "max-stone-no-alert", 40)) {
+                violate(p, "Xray", String.format(
+                        "%d quang quy (kim cuong/esmeralda/ancient) nhung chi %d block da",
+                        st.preciousMined, st.stoneMined));
+            }
+        } else if (isStone(mat)) {
+            st.oreStreak = 0;
+        }
+    }
+
+    private static boolean isOre(Material m) {
+        String n = m.name();
+        return n.endsWith("_ORE") || n.equals("ANCIENT_DEBRIS") || n.equals("NETHER_GOLD_ORE");
+    }
+
+    private static boolean isStone(Material m) {
+        String n = m.name();
+        return n.equals("STONE") || n.equals("DEEPSLATE") || n.equals("TUFF") || n.equals("GRANITE")
+                || n.equals("DIORITE") || n.equals("ANDESITE") || n.equals("NETHERRACK");
+    }
+
+    private static boolean isPrecious(Material m) {
+        String n = m.name();
+        return n.contains("DIAMOND") || n.contains("EMERALD") || n.equals("ANCIENT_DEBRIS");
     }
 
     // ---------- teleport ignore ----------

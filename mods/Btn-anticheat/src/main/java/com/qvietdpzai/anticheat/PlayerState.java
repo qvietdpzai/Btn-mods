@@ -3,6 +3,11 @@ package com.qvietdpzai.anticheat;
 /** Trang thai theo doi 1 nguoi choi (phat hien cheat). */
 public final class PlayerState {
 
+    // xray stats
+    public int totalMined, stoneMined, oreMined, preciousMined;
+    public long lastOreMs;
+    public int oreStreak;
+
     public int airTicks;
     public int fallTicks;
     public double maxFallSpeed;

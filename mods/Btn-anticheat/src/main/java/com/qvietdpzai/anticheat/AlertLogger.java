@@ -38,6 +38,14 @@ public final class AlertLogger {
         if (webhook != null && !webhook.isBlank()) sendWebhook(webhook, line);
     }
 
+    /** Ghi log thô (khong theo dinh dang alert). */
+    public void logRaw(String line) {
+        plugin.getLogger().warning("[ANTICHEAT] " + line);
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> appendFile(line));
+        String webhook = plugin.getConfig().getString("discord.webhook-url", "");
+        if (webhook != null && !webhook.isBlank()) sendWebhook(webhook, line);
+    }
+
     private void appendFile(String line) {
         try (BufferedWriter w = new BufferedWriter(new FileWriter(logFile, true))) {
             w.write(line);

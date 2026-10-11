@@ -1,0 +1,51 @@
+# Btn-antilag - giam tai server
+
+# Chu ky quet va don sach (giay)
+cleanup:
+  interval-seconds: 120
+
+  # Don item rac tren dat
+  items:
+    enabled: true
+    # Chi don item da nam tren dat it nhat bao lau (giay) - tranh mat do vua rot
+    min-age-seconds: 60
+    # Canh bao truoc 10 giay va thong bao sau khi don
+    broadcast-warning: true
+    warning-message: '&e[Antilag] &fItem rac tren dat se duoc don sau &c10 giay&f!'
+    done-message: '&e[Antilag] &fDa don &c{N} &fitem rac.'
+    # Khong xoa item co ten tuy chinh
+    protect-named-items: true
+    # Cac loai item bao ve khong bi don
+    protect-items:
+      - DIAMOND_BLOCK
+      - NETHERITE_BLOCK
+      - DRAGON_EGG
+      - BEACON
+      - SHULKER_BOX
+      - ELYTRA
+      - TOTEM_OF_UNDYING
+      - DIAMOND
+      - NETHERITE_INGOT
+      - ANCIENT_DEBRIS
+
+  # Gioi han so quai moi world (xoa con xa nguoi choi nhat truoc)
+  mobs:
+    enabled: false
+    per-world-limit: 300
+
+  # Don xe/boat bo trong qua lau
+  vehicles:
+    enabled: true
+    max-age-ticks: 24000
+
+# Tu dong giam view-distance khi TPS thap (tra lai khi hoi phuc)
+view-distance:
+  dynamic: false
+  low-tps: 17.0
+  low: 3
+  normal: 6
+  switch-after-seconds: 30
+
+# Ghi thong ke dinh ky vao log
+report:
+  enabled: true

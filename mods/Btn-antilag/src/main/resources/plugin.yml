@@ -1,0 +1,18 @@
+name: Btn-antilag
+version: 1.0.0
+main: com.qvietdpzai.antilag.BtnAntilag
+api-version: '26.2'
+description: Giam tai server: don item rac, gioi han quai, view-distance linh hoat
+author: qvietdpzai
+commands:
+  antilag:
+    description: Thong ke va don rac
+    usage: /antilag [status|clear|reload]
+    aliases: [al, blag]
+    permission: btnantilag.admin
+    permission-message: Ban khong co quyen nay.
+permissions:
+  btnantilag.admin:
+    default: op
+  btnantilag.alerts:
+    default: op
