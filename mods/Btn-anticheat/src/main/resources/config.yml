@@ -34,9 +34,9 @@ checks:
     enabled: true
     # Goc lech toi da khi tan cong (do) - nguoi thuong nhin thang vao dich
     max-angle: 70
+  # NoSwing: TAT - bao sai (goi swing toi sau goi danh khi click nhanh/bi lag)
   noswing:
-    enabled: true
-    # Thoi gian toi da khong vay tay ma van danh duoc (ms)
+    enabled: false
     max-ms-since-swing: 350
   autoclick:
     enabled: true

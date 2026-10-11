@@ -49,7 +49,16 @@ public final class PunishmentManager {
         names.put(p.getUniqueId(), p.getName());
         save();
 
-        String duration = durationFor(count);
+        // chi ban khi du so lan bi phat hien; neu chua du -> chi ghi log
+        int minFlags = Math.max(1, plugin.getConfig().getInt("punishments.flags-before-ban", 2));
+        if (count < minFlags) {
+            plugin.getLogger().info("[anticheat] " + p.getName() + " | " + check + " | phat hien lan " + count
+                    + "/" + minFlags + " (chi ghi log): " + detail);
+            return null;
+        }
+        int level = count - (minFlags - 1);   // 1 = lan phat thu nhat -> 1 phut
+
+        String duration = durationFor(level);
         String serverName = plugin.getConfig().getString("punishments.ban-reason", "&cBan boi Btn-anticheat");
         String reason = ChatColor.translateAlternateColorCodes('&', serverName)
                 + ChatColor.GRAY + " (" + check + "): " + detail
@@ -70,12 +79,13 @@ public final class PunishmentManager {
         }
 
         String msg = ChatColor.RED + "[Btn-anticheat] Da ban " + ChatColor.YELLOW + p.getName()
-                + ChatColor.RED + " (" + prettyDuration + ") - " + check + " lan " + count;
-        plugin.getLogger().warning("BAN " + p.getName() + " " + prettyDuration + " | " + check + " lan " + count + " | " + detail);
+                + ChatColor.RED + " (" + prettyDuration + ") - " + check + " lan " + level;
+        plugin.getLogger().warning("BAN " + p.getName() + " " + prettyDuration + " | " + check + " lan phat " + level + " | " + detail);
         for (Player op : Bukkit.getOnlinePlayers()) {
             if (op.hasPermission("btnanticheat.alerts")) op.sendMessage(msg);
         }
-        plugin.logger().logRaw("[PUNISH] " + p.getName() + " | " + check + " | lan " + count + " | ban " + prettyDuration + " | " + detail);
+        plugin.logger().logRaw("[PUNISH] " + p.getName() + " | " + check + " | lan phat " + level
+                + " (flag " + count + ") | ban " + prettyDuration + " | " + detail);
         return prettyDuration;
     }
 
