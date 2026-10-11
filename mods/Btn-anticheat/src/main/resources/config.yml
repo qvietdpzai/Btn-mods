@@ -15,9 +15,16 @@ exempt-worlds: []
 # Prefix thong bao cho OP trong game
 alert-prefix: '&8[&c!&8] &7'
 
-# Gui log ve Discord (de trong neu khong dung)
+# Gui thong bao ve Discord - chon 1 trong 2 cach:
+# 1) webhook (don gian, an toan): Discord -> kenh -> Edit Channel -> Integrations -> Webhooks
+#    discord:
+#      webhook-url: 'https://discord.com/api/webhooks/...'
+# 2) bot token (can channel-id, bot phai co quyen gui tin trong kenh do)
+#    LUU Y: token cua server dat o plugins/Btn-anticheat/config.yml, KHONG commit len git
 discord:
   webhook-url: ''
+  bot-token: ''
+  channel-id: ''
 
 # Cau hinh trung phat leo thang
 punishments:

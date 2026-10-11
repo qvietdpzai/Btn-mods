@@ -1,5 +1,7 @@
 package com.qvietdpzai.anticheat;
 
+import org.bukkit.configuration.ConfigurationSection;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -10,12 +12,13 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-/** Ghi log ra file + console + Discord webhook. */
+/** Ghi log ra file + console + Discord (webhook hoac bot token). */
 public final class AlertLogger {
 
     private final BtnAnticheatPlugin plugin;
     private final File logFile;
     private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final String API = "https://discord.com/api/v10/channels/";
 
     public AlertLogger(BtnAnticheatPlugin plugin) {
         this.plugin = plugin;
@@ -30,22 +33,73 @@ public final class AlertLogger {
 
         plugin.getLogger().warning("[ANTICHEAT] " + player + " | " + check + " | " + detail);
 
-        // ghi file + webhook (async) de khong chan main thread
+        // ghi file + gui Discord (async) de khong chan main thread
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             appendFile(line);
-            String webhook = plugin.getConfig().getString("discord.webhook-url", "");
-            if (webhook != null && !webhook.isBlank()) sendWebhook(webhook, line);
+            sendDiscord(line);
         });
     }
 
     /** Ghi log thô (khong theo dinh dang alert). */
     public void logRaw(String line) {
         plugin.getLogger().warning("[ANTICHEAT] " + line);
-        String webhook = plugin.getConfig().getString("discord.webhook-url", "");
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             appendFile(line);
-            if (webhook != null && !webhook.isBlank()) sendWebhook(webhook, line);
+            sendDiscord(line);
         });
+    }
+
+    /** Gui 1 dong len Discord theo cau hinh (webhook uu tien hon bot token). */
+    private void sendDiscord(String line) {
+        ConfigurationSection dc = plugin.getConfig().getConfigurationSection("discord");
+        if (dc == null) return;
+
+        String webhook = dc.getString("webhook-url", "");
+        if (webhook != null && !webhook.isBlank()) {
+            post(webhook, null, line);
+            return;
+        }
+
+        String token = dc.getString("bot-token", "");
+        String channel = dc.getString("channel-id", "");
+        if (token != null && !token.isBlank() && channel != null && !channel.isBlank()) {
+            post(API + channel.trim() + "/messages", token, line);
+        }
+    }
+
+    /**
+     * POST noi dung len Discord.
+     * @param url   webhook URL hoac API messages URL
+     * @param token bot token (null neu dung webhook)
+     */
+    private void post(String url, String token, String line) {
+        HttpURLConnection c = null;
+        try {
+            c = (HttpURLConnection) URI.create(url).toURL().openConnection();
+            c.setRequestMethod("POST");
+            c.setDoOutput(true);
+            c.setRequestProperty("Content-Type", "application/json");
+            if (token != null) c.setRequestProperty("Authorization", "Bot " + token);
+            c.setConnectTimeout(5000);
+            c.setReadTimeout(5000);
+
+            String content = "{\"content\": \"[Btn-anticheat] " + escape(line) + "\"}";
+            try (OutputStream os = c.getOutputStream()) {
+                os.write(content.getBytes(StandardCharsets.UTF_8));
+            }
+
+            int code = c.getResponseCode();
+            if (code < 200 || code >= 300) {
+                // KHONG log url (co the chua token/webhook)
+                plugin.getLogger().warning("Discord tra ve HTTP " + code
+                        + " - kiem tra lai token/channel-id hoac quyen gui tin");
+            }
+        } catch (Exception e) {
+            plugin.getLogger().warning("Khong gui duoc Discord: "
+                    + sanitize(String.valueOf(e.getMessage()), token));
+        } finally {
+            if (c != null) c.disconnect();
+        }
     }
 
     private void appendFile(String line) {
@@ -57,23 +111,11 @@ public final class AlertLogger {
         }
     }
 
-    private void sendWebhook(String url, String line) {
-        try {
-            HttpURLConnection c = (HttpURLConnection) URI.create(url).toURL().openConnection();
-            c.setRequestMethod("POST");
-            c.setDoOutput(true);
-            c.setRequestProperty("Content-Type", "application/json");
-            c.setConnectTimeout(5000);
-            c.setReadTimeout(5000);
-            String content = "{\"content\": \"[Btn-anticheat] " + escape(line) + "\"}";
-            try (OutputStream os = c.getOutputStream()) {
-                os.write(content.getBytes(StandardCharsets.UTF_8));
-            }
-            c.getResponseCode();
-            c.disconnect();
-        } catch (Exception ignored) {
-            // webhook loi thi bo qua, khong lam anh huong server
-        }
+    /** Xoa token khoi chuoi truoc khi log (tranh lo secret). */
+    private String sanitize(String s, String token) {
+        if (s == null) return "(khong ro)";
+        if (token != null && !token.isBlank()) s = s.replace(token, "***");
+        return s.length() > 120 ? s.substring(0, 120) : s;
     }
 
     private String escape(String s) {
