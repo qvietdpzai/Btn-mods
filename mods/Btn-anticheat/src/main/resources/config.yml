@@ -47,8 +47,9 @@ checks:
   fastplace:
     enabled: true
     max-placement-cps: 25
+  # Phase (di xuyen block): TAT - bao loi nham qua cua, xe, dung do dung block...
   phase:
-    enabled: true
+    enabled: false
   xray:
     enabled: true
     # Toi thieu block dao duoc truoc khi xet ti le (chong bao nham)
