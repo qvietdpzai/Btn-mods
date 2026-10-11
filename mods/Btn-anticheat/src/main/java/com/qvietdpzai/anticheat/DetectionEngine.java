@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /** Btn-anticheat: phat hien cheat (fly/speed/reach/killaura/nofall/velocity/phase/autoclick). */
 public final class DetectionEngine implements Listener {
@@ -54,11 +53,21 @@ public final class DetectionEngine implements Listener {
 
     public void register(BtnAnticheatPlugin plugin) {
         this.plugin = plugin;
+        reloadConfig();
+    }
+
+    /** Nap lai cau hinh dong (goi tu /anticheat reload). */
+    public void reloadConfig() {
         List<?> worlds = plugin.getConfig().getList("exempt-worlds");
         if (worlds != null) {
-            exemptWorlds = worlds.stream().map(Object::toString).collect(java.util.stream.Collectors.toSet());
+            exemptWorlds = worlds.stream().map(Object::toString)
+                    .collect(java.util.stream.Collectors.toUnmodifiableSet());
+        } else {
+            exemptWorlds = java.util.Collections.emptySet();
         }
     }
+
+    public java.util.Set<String> exemptWorldNames() { return exemptWorlds; }
 
     private double tps() {
         try {
@@ -96,6 +105,7 @@ public final class DetectionEngine implements Listener {
         PlayerState st = state(p);
         st.violations++;
         st.lastViolationMs = System.currentTimeMillis();
+        st.level = Math.min(20, st.level + 2); // 2 diem/vi pham, toi da 20
 
         plugin.logger().log(p.getName(), check, detail, p.getPing(), tps());
 
@@ -289,7 +299,6 @@ public final class DetectionEngine implements Listener {
         if (exempt(p)) return;
         if (!enabled("nofall")) return;
 
-        PlayerState st = state(p);
         // roi tu do cao nhung khong nhan sat thuong / nhan qua it
         double minFallDist = threshold("nofall", "min-fall-distance", 15);
         boolean allowFeather = plugin.getConfig().getBoolean("checks.nofall.allow-feather-falling", true);
@@ -310,14 +319,14 @@ public final class DetectionEngine implements Listener {
         if (exempt(p)) return;
         PlayerState st = state(p);
         long now = System.currentTimeMillis();
-        if (now - st.secondWindowStart > 1000) {
-            st.secondWindowStart = now;
-            st.attacksThisSecond = 0;
+        if (now - st.placeWindowStart > 1000) {
+            st.placeWindowStart = now;
+            st.placesThisSecond = 0;
         }
-        st.attacksThisSecond++;
+        st.placesThisSecond++;
         int limit = threshold("fastplace", "max-placement-cps", 25);
-        if (st.attacksThisSecond > limit) {
-            violate(p, "FastPlace", st.attacksThisSecond + " block/giay");
+        if (st.placesThisSecond > limit) {
+            violate(p, "FastPlace", st.placesThisSecond + " block/giay");
         }
     }
 
@@ -328,6 +337,7 @@ public final class DetectionEngine implements Listener {
         if (!enabled("xray")) return;
         Player p = event.getPlayer();
         if (p.hasPermission("btnanticheat.bypass")) return;
+        if (exemptWorld(p)) return; // world mien kiem tra
         if (p.getGameMode() == GameMode.CREATIVE) return;
 
         Material mat = event.getBlock().getType();

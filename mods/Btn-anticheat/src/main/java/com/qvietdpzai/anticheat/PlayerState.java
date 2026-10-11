@@ -15,9 +15,14 @@ public final class PlayerState {
 
     public long lastAttackMs;
     public java.util.UUID lastVictim;
-    public long lastSwingMs;
+    /** Thoi diem vay tay gan nhat. Khoi tao = now de tranh NoSwing bao loi khi moi vao. */
+    public long lastSwingMs = System.currentTimeMillis();
+    /** Dem tan cong/giay (autoclick) - RIENG BIET voi fastplace. */
     public int attacksThisSecond;
     public long secondWindowStart;
+    /** Dem dat block/giay (fastplace) - RIENG BIET voi autoclick. */
+    public int placesThisSecond;
+    public long placeWindowStart;
 
     public long lastVelocityMs;
     public int violations;

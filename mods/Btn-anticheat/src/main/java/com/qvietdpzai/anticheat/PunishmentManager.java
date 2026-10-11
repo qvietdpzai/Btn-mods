@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Quan ly diem vi pham leo thang: lan 1 -> ban 1 phut, lan 2 -> 30 phut, lan 3 -> vinh vien.
@@ -25,9 +26,9 @@ public final class PunishmentManager {
 
     private final BtnAnticheatPlugin plugin;
     private final File file;
-    /** uuid -> (check -> so lan vi pham) */
-    private final Map<UUID, Map<String, Integer>> violations = new HashMap<>();
-    private final Map<UUID, String> names = new HashMap<>();
+    /** uuid -> (check -> so lan vi pham). ConcurrentHashMap: main thread ghi, task async doc khi save. */
+    private final Map<UUID, Map<String, Integer>> violations = new ConcurrentHashMap<>();
+    private final Map<UUID, String> names = new ConcurrentHashMap<>();
 
     public PunishmentManager(BtnAnticheatPlugin plugin) {
         this.plugin = plugin;
@@ -44,7 +45,7 @@ public final class PunishmentManager {
         if (!enabled()) return null;
 
         int count = violations
-                .computeIfAbsent(p.getUniqueId(), k -> new HashMap<>())
+                .computeIfAbsent(p.getUniqueId(), k -> new ConcurrentHashMap<>())
                 .merge(check, 1, Integer::sum);
         names.put(p.getUniqueId(), p.getName());
         save();
@@ -151,14 +152,21 @@ public final class PunishmentManager {
     // ---------- luu tru ----------
 
     private void save() {
+        // snapshot: main thread van ghi vao map trong khi task async doc
+        Map<UUID, Map<String, Integer>> snap = new HashMap<>();
+        for (Map.Entry<UUID, Map<String, Integer>> e : violations.entrySet()) {
+            snap.put(e.getKey(), new HashMap<>(e.getValue()));
+        }
+        Map<UUID, String> namesSnap = new HashMap<>(names);
+
         plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             YamlConfiguration y = new YamlConfiguration();
-            for (Map.Entry<UUID, Map<String, Integer>> e : violations.entrySet()) {
+            for (Map.Entry<UUID, Map<String, Integer>> e : snap.entrySet()) {
                 String base = e.getKey().toString();
                 for (Map.Entry<String, Integer> c : e.getValue().entrySet()) {
                     y.set(base + "." + c.getKey(), c.getValue());
                 }
-                String name = names.get(e.getKey());
+                String name = namesSnap.get(e.getKey());
                 if (name != null) y.set(base + ".name", name);
             }
             try { y.save(file); } catch (IOException ignored) { }
@@ -175,7 +183,7 @@ public final class PunishmentManager {
                 if (sec == null) continue;
                 String name = sec.getString("name");
                 if (name != null) names.put(id, name);
-                Map<String, Integer> m = new HashMap<>();
+                Map<String, Integer> m = new ConcurrentHashMap<>();
                 for (String k : sec.getKeys(false)) {
                     if (k.equals("name")) continue;
                     m.put(k, sec.getInt(k));

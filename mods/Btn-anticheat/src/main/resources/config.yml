@@ -3,8 +3,6 @@
 # Hanh dong khi vi pham: log (chi ghi) | kick | ban
 # Neu khong phai "log": xoa diem sau khi thuc hien
 action: log
-# So lan vi pham toi da truoc khi thuc hien hanh dong (chi khi action != log)
-max-violations-before-action: 15
 
 # Bo qua neu TPS thap hoac ping cao (tranh bao loi nham)
 min-tps: 17.0

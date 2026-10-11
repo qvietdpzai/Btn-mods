@@ -30,20 +30,22 @@ public final class AlertLogger {
 
         plugin.getLogger().warning("[ANTICHEAT] " + player + " | " + check + " | " + detail);
 
-        // ghi file (async)
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> appendFile(line));
-
-        // discord webhook
-        String webhook = plugin.getConfig().getString("discord.webhook-url", "");
-        if (webhook != null && !webhook.isBlank()) sendWebhook(webhook, line);
+        // ghi file + webhook (async) de khong chan main thread
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            appendFile(line);
+            String webhook = plugin.getConfig().getString("discord.webhook-url", "");
+            if (webhook != null && !webhook.isBlank()) sendWebhook(webhook, line);
+        });
     }
 
     /** Ghi log thô (khong theo dinh dang alert). */
     public void logRaw(String line) {
         plugin.getLogger().warning("[ANTICHEAT] " + line);
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> appendFile(line));
         String webhook = plugin.getConfig().getString("discord.webhook-url", "");
-        if (webhook != null && !webhook.isBlank()) sendWebhook(webhook, line);
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            appendFile(line);
+            if (webhook != null && !webhook.isBlank()) sendWebhook(webhook, line);
+        });
     }
 
     private void appendFile(String line) {

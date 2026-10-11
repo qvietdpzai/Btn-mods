@@ -29,7 +29,11 @@ public final class BtnAnticheatPlugin extends JavaPlugin {
             @Override public void run() { engine.tickDecay(); }
         }.runTaskTimer(this, 1200L, 1200L);
         getLogger().info("Btn-anticheat enabled - che do: " + getConfig().getString("action", "log"));
-        getLogger().info("Cac check: " + String.join(", ", getConfig().getConfigurationSection("checks").getKeys(false)));
+        var checksSec = getConfig().getConfigurationSection("checks");
+        getLogger().info("Cac check: " + (checksSec != null
+                ? String.join(", ", checksSec.getKeys(false)) : "(khong co)"));
+        getLogger().info("World mien: " + (engine.exemptWorldNames().isEmpty()
+                ? "(khong)" : String.join(", ", engine.exemptWorldNames())));
     }
 
     @Override
@@ -64,6 +68,7 @@ public final class BtnAnticheatPlugin extends JavaPlugin {
         switch (args[0].toLowerCase()) {
             case "reload":
                 reloadConfig();
+                engine.reloadConfig(); // nap lai exempt-worlds
                 sender.sendMessage(ChatColor.GREEN + "Da reload config.");
                 return true;
             case "violations": {
