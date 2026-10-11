@@ -1,6 +1,5 @@
 package com.qvietdpzai.btnshop;
 
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -16,6 +15,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -68,7 +68,7 @@ public final class ShopListener implements Listener {
     private static ItemStack balanceItem(Player p) {
         ItemStack i = new ItemStack(Material.SUNFLOWER);
         ItemMeta m = i.getItemMeta();
-        double bal = plugin.hasEconomy() ? plugin.economy().getBalance(p) : 0;
+        double bal = plugin.hasEconomy() ? plugin.econ().balance(p).doubleValue() : 0;
         m.setDisplayName(ChatColor.GOLD + "So du cua ban");
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.WHITE + "$" + String.format("%,.2f", bal));
@@ -150,7 +150,7 @@ public final class ShopListener implements Listener {
         }
 
         if (total > 0) {
-            plugin.economy().depositPlayer(p, total);
+            plugin.econ().deposit(p, BigDecimal.valueOf(total));
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.2f);
             p.sendMessage(ChatColor.GREEN + "Da ban " + sold + " item, nhan duoc "
                     + ChatColor.YELLOW + "$" + plugin.money(total));
@@ -239,27 +239,32 @@ public final class ShopListener implements Listener {
         qty = units * perUnit;                            // chinh ve boi so chong
         double total = entry.buy * units;
 
-        Economy eco = plugin.economy();
-        if (!eco.has(p, total)) {
-            p.sendMessage(ChatColor.RED + "Khong du tien! Can " + ChatColor.YELLOW + "$" + plugin.money(total)
-                    + ChatColor.RED + ", ban co " + ChatColor.YELLOW + "$" + plugin.money(eco.getBalance(p)));
+        BigDecimal need = BigDecimal.valueOf(total);
+        if (!plugin.econ().has(p, need)) {
+            p.sendMessage(ChatColor.RED + "Khong du tien! Can " + ChatColor.YELLOW + "$" + plugin.money(need)
+                    + ChatColor.RED + ", ban co " + ChatColor.YELLOW + "$" + plugin.money(plugin.econ().balance(p)));
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
 
-        // cho trong tui
+        // cho trong tui - kiem tra truoc khi tru tien
         int free = freeSpace(p, entry.material);
         if (free < qty) {
             p.sendMessage(ChatColor.RED + "Tui do khong du cho! Can " + qty + " slot item.");
             return;
         }
 
-        eco.withdrawPlayer(p, total);
+        // tru tien: neu that bai thi huy, khong tra item
+        if (!plugin.econ().withdraw(p, BigDecimal.valueOf(total))) {
+            p.sendMessage(ChatColor.RED + "Khong thanh toan duoc - giao dich da huy.");
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
         ItemStack give = new ItemStack(Material.valueOf(entry.material), qty);
         if (entry.potion != null) PotionUtil.apply(give, entry.potion);
         p.getInventory().addItem(give);
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.4f);
-        p.sendMessage(ChatColor.GREEN + "Da mua " + qty + "x " + pretty(entry.material)
+        p.sendMessage(ChatColor.GREEN + "Da mua " + qty + "x " + viName(entry.material)
                 + ChatColor.GRAY + " -$" + plugin.money(total));
 
         refreshBalance(p);
@@ -284,9 +289,9 @@ public final class ShopListener implements Listener {
         if (total <= 0) { p.sendMessage(ChatColor.RED + "Mon nay khong co gia ban."); return; }
 
         removeMatching(p, entry, sample, qty);
-        plugin.economy().depositPlayer(p, total);
+        plugin.econ().deposit(p, BigDecimal.valueOf(total));
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.4f);
-        p.sendMessage(ChatColor.GREEN + "Da ban " + qty + "x " + pretty(entry.material)
+        p.sendMessage(ChatColor.GREEN + "Da ban " + qty + "x " + viName(entry.material)
                 + ChatColor.GRAY + " +$" + plugin.money(total));
 
         plugin.shopLog(String.format(Locale.US, "%s sold %d x %s for %.2f with the sell gui.",
@@ -308,7 +313,7 @@ public final class ShopListener implements Listener {
             it.setAmount(0);
         }
         if (items == 0) { p.sendMessage(ChatColor.YELLOW + "Khong co gi de ban."); return; }
-        plugin.economy().depositPlayer(p, total);
+        plugin.econ().deposit(p, BigDecimal.valueOf(total));
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.2f);
         p.sendMessage(ChatColor.GREEN + "Da ban " + items + " item, nhan duoc "
                 + ChatColor.YELLOW + "$" + plugin.money(total));
@@ -334,7 +339,7 @@ public final class ShopListener implements Listener {
             it.setAmount(0);
         }
         if (items == 0) { p.sendMessage(ChatColor.YELLOW + "Khong co gi de ban."); return; }
-        plugin.economy().depositPlayer(p, total);
+        plugin.econ().deposit(p, BigDecimal.valueOf(total));
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.7f, 1.2f);
         p.sendMessage(ChatColor.GREEN + "Da ban " + items + " item, nhan duoc "
                 + ChatColor.YELLOW + "$" + plugin.money(total));
@@ -426,8 +431,10 @@ public final class ShopListener implements Listener {
         ItemStack i = new ItemStack(Material.valueOf(e.material));
         if (e.potion != null) PotionUtil.apply(i, e.potion);
         ItemMeta m = i.getItemMeta();
+        // ten tieng Viet (fallback: ten tieng Anh neu tu dien rong)
+        String name = plugin.vi() != null ? plugin.vi().apply(e.material) : pretty(e.material);
         m.setDisplayName(ChatColor.YELLOW + (e.potion != null ? PotionUtil.displayName(e.potion)
-                + ChatColor.DARK_GRAY + " (" + form(e.material) + ")" : pretty(e.material)));
+                + ChatColor.DARK_GRAY + " (" + form(e.material) + ")" : name));
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY + "Mua: " + (e.buy >= 0
                 ? ChatColor.GREEN + "$" + MONEY.format(e.buy) + (e.stackSize > 0 ? ChatColor.GRAY + " / chong " + e.stackSize : "")
@@ -447,7 +454,7 @@ public final class ShopListener implements Listener {
             case "SPLASH_POTION" -> "nem";
             case "LINGERING_POTION" -> "luu lang";
             case "TIPPED_ARROW" -> "mui ten";
-            default -> pretty(material);
+            default -> plugin.vi() != null ? plugin.vi().apply(material) : pretty(material);
         };
     }
 
@@ -461,6 +468,11 @@ public final class ShopListener implements Listener {
         if (!lore.isEmpty()) m.setLore(lore);
         i.setItemMeta(m);
         return i;
+    }
+
+    /** Ten tieng Viet cua material (fallback: tieng Anh). */
+    private static String viName(String material) {
+        return plugin.vi() != null ? plugin.vi().apply(material) : pretty(material);
     }
 
     private static String pretty(String material) {

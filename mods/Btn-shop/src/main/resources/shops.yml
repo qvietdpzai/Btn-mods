@@ -2,9 +2,9 @@
 # Sua file nay roi /btnshop reload
 sections:
   Z_EverythingElse:
-    title: 'Everything Else'
+    title: 'Linh tinh'
     icon: CHEST
-    icon-name: 'Everything Else'
+    icon-name: 'Linh tinh'
     slot: 10
     items:  # 341
       - material: BAMBOO_MOSAIC_SLAB
@@ -1028,9 +1028,9 @@ sections:
         buy: 15.81
         sell: 3.96
   stone:
-    title: 'Stones'
+    title: 'Da & Gach'
     icon: STONE_BRICKS
-    icon-name: 'Stones'
+    icon-name: 'Da & Gach'
     slot: 11
     items:  # 89
       - material: STONE
@@ -1301,9 +1301,9 @@ sections:
         buy: 48.63
         sell: 12.16
   wood:
-    title: 'Woods'
+    title: 'Go'
     icon: OAK_LOG
-    icon-name: 'Woods'
+    icon-name: 'Go'
     slot: 12
     items:  # 82
       - material: OAK_WOOD
@@ -1601,9 +1601,9 @@ sections:
         buy: 4.75
         sell: 1.19
   misc:
-    title: 'Misc'
+    title: 'Do dung'
     icon: CHEST
-    icon-name: 'Misc'
+    icon-name: 'Do dung'
     slot: 13
     items:  # 59
       - material: NAME_TAG
@@ -1784,9 +1784,9 @@ sections:
         buy: 240000
         sell: 24.73
   storage:
-    title: 'Storage'
+    title: 'Luu tru'
     icon: CHEST
-    icon-name: 'Storage'
+    icon-name: 'Luu tru'
     slot: 14
     items:  # 39
       - material: CHEST
@@ -1907,9 +1907,9 @@ sections:
         buy: 521
         sell: 6.69
   dyes:
-    title: 'Dyes'
+    title: 'Thuoc nhuom & Hoa'
     icon: ROSE_BUSH
-    icon-name: 'Dyes'
+    icon-name: 'Thuoc nhuom & Hoa'
     slot: 15
     items:  # 38
       - material: WHITE_DYE
@@ -2043,9 +2043,9 @@ sections:
         buy: 1
         sell: 0.25
   resources:
-    title: 'Resources'
+    title: 'Nguyen lieu'
     icon: COPPER_BLOCK
-    icon-name: 'Resources'
+    icon-name: 'Nguyen lieu'
     slot: 16
     items:  # 35
       - material: COPPER_BLOCK
@@ -2166,9 +2166,9 @@ sections:
         buy: 4
         sell: 0.4
   food:
-    title: 'Food'
+    title: 'Thuc an'
     icon: COOKED_BEEF
-    icon-name: 'Food'
+    icon-name: 'Thuc an'
     slot: 19
     items:  # 28
       - material: COOKIE
@@ -2269,9 +2269,9 @@ sections:
         buy: 79.32
         sell: 19.83
   music:
-    title: 'Music'
+    title: 'Nhac cu'
     icon: CHEST
-    icon-name: 'Music'
+    icon-name: 'Nhac cu'
     slot: 20
     items:  # 22
       - material: MUSIC_DISC_11
@@ -2341,9 +2341,9 @@ sections:
         buy: 100
         sell: 25
   weapons:
-    title: 'Weapons'
+    title: 'Vu khi'
     icon: IRON_SWORD
-    icon-name: 'Weapons'
+    icon-name: 'Vu khi'
     slot: 21
     items:  # 21
       - material: WOODEN_SWORD
@@ -2418,9 +2418,9 @@ sections:
       buy: 150
       sell: 37.5
   potions:
-    title: Potions
+    title: 'Thuoc'
     icon: POTION
-    icon-name: Potions
+    icon-name: 'Thuoc'
     slot: 22
     items:  # 139 tu EconomyShopGUI
     - material: POTION
@@ -2981,9 +2981,9 @@ sections:
       stack-size: 8
 
   books:
-    title: '&6Sach'
+    title: '&dSach'
     icon: BOOK
-    icon-name: '&6Sach'
+    icon-name: '&dSach'
     slot: 23
     items:
     - material: BOOK
@@ -2996,10 +2996,10 @@ sections:
       buy: -1
       sell: -1
   spawners:
-    title: 'Spawners'
+    title: 'Spawner'
     icon: SPAWNER
-    icon-name: 'Spawners'
-    slot: 23
+    icon-name: 'Spawner'
+    slot: 24
     items:  # 1
       - material: SPAWNER
         buy: 225000

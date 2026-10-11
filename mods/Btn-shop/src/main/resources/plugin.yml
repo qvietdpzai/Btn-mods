@@ -2,9 +2,10 @@ name: Btn-shop
 version: 1.0.0
 main: com.qvietdpzai.btnshop.BtnShop
 api-version: '26.2'
-depend:
-  - Vault
-description: 'Shop nhe: mot file shops.yml, GUI mua/ban, ket noi Vault economy'
+# Khong bat buoc Vault: chay duoc ca voi EssentialsX (khuyen cai Vault neu muon tot hon)
+softdepend:
+  - Essentials
+description: 'Shop nhe: mot file shops.yml, GUI mua/ban, ten tieng Viet, chay voi Vault hoac EssentialsX'
 author: qvietdpzai
 commands:
   shop:

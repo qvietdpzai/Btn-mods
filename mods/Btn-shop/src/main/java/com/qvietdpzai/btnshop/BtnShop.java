@@ -1,24 +1,24 @@
 package com.qvietdpzai.btnshop;
 
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Map;
 import java.util.UUID;
 
-/** Btn-shop: shop nhe, 1 file shops.yml, ket noi Vault economy. */
+/** Btn-shop: shop nhe, 1 file shops.yml, ket noi Vault hoac EssentialsX. */
 public final class BtnShop extends JavaPlugin {
 
     private ShopConfig shopConfig;
-    private Economy economy;
+    private VietnameseNames vi;
+    private EconomyBridge econ;
     private final DecimalFormat money = new DecimalFormat("#,##0.##");
 
     @Override
@@ -27,13 +27,23 @@ public final class BtnShop extends JavaPlugin {
         saveDefaultConfig();
         this.shopConfig = new ShopConfig(this);
         shopConfig.load();
-        if (!setupEconomy()) {
-            getLogger().severe("Khong tim thay Vault/Economy - shop khong the giao dich!");
-            getLogger().severe("Cai Vault + plugin economy (Essentials...) roi restart.");
+        // copy vi.yml tu jar neu chua co (admin sua duoc sau do)
+        if (!new java.io.File(getDataFolder(), "vi.yml").exists()) {
+            try { saveResource("vi.yml", false); } catch (IllegalArgumentException ignored) { }
+        }
+        this.vi = new VietnameseNames(new java.io.File(getDataFolder(), "vi.yml"), getLogger());
+        vi.load();
+        this.econ = new EconomyBridge(this);
+        EconomyBridge.Provider p = econ.connect();
+        if (p == EconomyBridge.Provider.NONE) {
+            getLogger().severe("Khong tim thay economy!");
+            getLogger().severe("Can cai Vault HOAC EssentialsX. Neu chi co EssentialsX thi khong sao.");
+        } else {
+            getLogger().info("Economy: " + econ.status());
         }
         getServer().getPluginManager().registerEvents(new ShopListener(this), this);
         getLogger().info("Btn-shop enabled: " + shopConfig.sections().size() + " section, "
-                + shopConfig.totalItems() + " item");
+                + shopConfig.totalItems() + " item (ten tieng Viet)");
     }
 
     @Override
@@ -42,17 +52,11 @@ public final class BtnShop extends JavaPlugin {
         // (su dung /btnshop set|add tu luu ngay khi thao tac)
     }
 
-    private boolean setupEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) return false;
-        RegisteredServiceProvider<Economy> rsp =
-                getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) return false;
-        economy = rsp.getProvider();
-        return economy != null;
-    }
-
     public ShopConfig shopConfig() { return shopConfig; }
-    public Economy economy() { return economy; }
+    public VietnameseNames vi() { return vi; }
+    public EconomyBridge econ() { return econ; }
+    public boolean hasEconomy() { return econ.available(); }
+    public String money(BigDecimal v) { return money.format(v); }
     public String money(double v) { return money.format(v); }
 
     /** Ghi log dinh dang "Shop >> ..." (LangChillBridge doc tiền tố này). */
@@ -60,8 +64,6 @@ public final class BtnShop extends JavaPlugin {
         String prefix = getConfig().getString("log-prefix", "Shop >> ");
         getServer().getConsoleSender().sendMessage(prefix + line);
     }
-
-    public boolean hasEconomy() { return economy != null; }
 
     // ---------------- lệnh ----------------
 
@@ -117,7 +119,8 @@ public final class BtnShop extends JavaPlugin {
         switch (args[0].toLowerCase()) {
             case "reload":
                 shopConfig.load();
-                sender.sendMessage(ChatColor.GREEN + "Da reload shops.yml (" + shopConfig.totalItems() + " item)");
+                vi.load();
+                sender.sendMessage(ChatColor.GREEN + "Da reload shops.yml (" + shopConfig.totalItems() + " item) + vi.yml");
                 return true;
             case "total":
                 sender.sendMessage(ChatColor.GRAY + "Tong: " + shopConfig.totalItems()
